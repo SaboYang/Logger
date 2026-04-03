@@ -165,6 +165,7 @@ namespace Logger.WinForms.Demo
             _logger.AddInfo("WPF 日志控件已经通过 Logger.WinForms 封装成功挂载。");
             _logger.AddInfo("当前宿主窗体绑定了独立的 ILoggerOutput，默认不会与其他 Demo 窗口共享日志。");
             _logger.AddInfo("这个窗体不会调用日志控件的方法，而是直接向 ILoggerOutput 写入。");
+            WriteLogFilePath();
             _logger.AddInfo("点击“写入 WPF 示例”查看等级显示，点击“WPF 压力测试”执行批量写入。");
             WriteLevelSamples();
             UpdateStatus("WPF 宿主窗体已就绪");
@@ -178,6 +179,17 @@ namespace Logger.WinForms.Demo
                     Close();
                 }
             }
+        }
+
+        private void WriteLogFilePath()
+        {
+            ILogFileSource fileSource = _logger as ILogFileSource;
+            if (fileSource == null || !fileSource.IsFileOutputEnabled || string.IsNullOrWhiteSpace(fileSource.LogFilePath))
+            {
+                return;
+            }
+
+            _logger.AddInfo("本地日志文件: " + fileSource.LogFilePath);
         }
 
         private void SampleButton_Click(object sender, EventArgs e)

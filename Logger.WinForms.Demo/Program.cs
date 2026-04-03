@@ -18,6 +18,12 @@ namespace Logger.WinForms.Demo
                 return;
             }
 
+            if (options.OpenFileDemo)
+            {
+                Application.Run(new FileLogDemoForm());
+                return;
+            }
+
             if (options.OpenWpfHost)
             {
                 using (WpfHostForm hostForm = new WpfHostForm(options.StressLogCount, options.AutoRunStressTest, options.CloseAfterStressTest))
@@ -42,6 +48,8 @@ namespace Logger.WinForms.Demo
 
             public bool OpenFactoryDemo { get; private set; }
 
+            public bool OpenFileDemo { get; private set; }
+
             public int StressLogCount { get; private set; } = 30000;
 
             public static DemoLaunchOptions Parse(string[] args)
@@ -62,6 +70,10 @@ namespace Logger.WinForms.Demo
                              string.Equals(arg, "--log-manager-demo", StringComparison.OrdinalIgnoreCase))
                     {
                         options.OpenFactoryDemo = true;
+                    }
+                    else if (string.Equals(arg, "--file-demo", StringComparison.OrdinalIgnoreCase))
+                    {
+                        options.OpenFileDemo = true;
                     }
                     else if (string.Equals(arg, "--stress", StringComparison.OrdinalIgnoreCase))
                     {

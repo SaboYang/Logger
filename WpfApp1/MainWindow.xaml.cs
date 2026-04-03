@@ -35,7 +35,19 @@ namespace WpfApp1
             _logger.AddSuccess("日志控件已就绪。");
             _logger.AddInfo("当前支持等级：TRACE / DEBUG / INFO / SUCCESS / WARN / ERROR / FATAL。");
             _logger.AddInfo("当前窗口通过 Logger.Core 接口向 WPF 日志控件输出内容。");
+            WriteLogFilePath();
             _logger.AddInfo("点击“日志压力测试”可批量写入日志。");
+        }
+
+        private void WriteLogFilePath()
+        {
+            ILogFileSource fileSource = _logger as ILogFileSource;
+            if (fileSource == null || !fileSource.IsFileOutputEnabled || string.IsNullOrWhiteSpace(fileSource.LogFilePath))
+            {
+                return;
+            }
+
+            _logger.AddInfo("本地日志文件: " + fileSource.LogFilePath);
         }
 
         private async void BtnStressTest_Click(object sender, RoutedEventArgs e)

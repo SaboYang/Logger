@@ -28,6 +28,7 @@ namespace Logger.WinForms.Demo
         private readonly Button _stressButton;
         private readonly Button _openWpfHostButton;
         private readonly Button _openFactoryDemoButton;
+        private readonly Button _openFileDemoButton;
         private readonly NumericUpDown _stressCountInput;
         private readonly Label _statusLabel;
         private readonly StressSummaryPanel _summaryPanel;
@@ -61,7 +62,7 @@ namespace Logger.WinForms.Demo
             {
                 Dock = DockStyle.Top,
                 AutoSize = true,
-                ColumnCount = 8,
+                ColumnCount = 9,
                 RowCount = 1,
                 Margin = new Padding(0, 0, 0, 10)
             };
@@ -118,6 +119,17 @@ namespace Logger.WinForms.Demo
             };
             _openFactoryDemoButton.Click += OpenFactoryDemoButton_Click;
 
+            _openFileDemoButton = new Button
+            {
+                AutoSize = true,
+                Height = 34,
+                Margin = new Padding(0, 0, 12, 0),
+                Padding = new Padding(12, 0, 12, 0),
+                Text = "打开文件 Demo",
+                UseVisualStyleBackColor = true
+            };
+            _openFileDemoButton.Click += OpenFileDemoButton_Click;
+
             Label countLabel = new Label
             {
                 AutoSize = true,
@@ -172,9 +184,10 @@ namespace Logger.WinForms.Demo
             toolbar.Controls.Add(_stressButton, 1, 0);
             toolbar.Controls.Add(_openWpfHostButton, 2, 0);
             toolbar.Controls.Add(_openFactoryDemoButton, 3, 0);
-            toolbar.Controls.Add(countLabel, 4, 0);
-            toolbar.Controls.Add(_stressCountInput, 5, 0);
-            toolbar.Controls.Add(_statusLabel, 7, 0);
+            toolbar.Controls.Add(_openFileDemoButton, 4, 0);
+            toolbar.Controls.Add(countLabel, 5, 0);
+            toolbar.Controls.Add(_stressCountInput, 6, 0);
+            toolbar.Controls.Add(_statusLabel, 8, 0);
 
             rootLayout.Controls.Add(toolbar, 0, 0);
             rootLayout.Controls.Add(infoLabel, 0, 1);
@@ -191,12 +204,25 @@ namespace Logger.WinForms.Demo
             _logger.AddInfo("WinForms 示例程序已启动。");
             _logger.AddInfo("当前主窗体使用独立的 ILoggerOutput，不再与其他 Demo 窗口共享日志。");
             _logger.AddInfo("这个窗体不会调用日志控件的方法，而是直接向 ILoggerOutput 写入。");
+            WriteLogFilePath();
             _logger.AddInfo("点击“写入等级示例”查看全部日志等级，点击“日志压力测试”执行批量写入。");
             _logger.AddInfo("点击“打开 WPF 宿主”可以在 WinForms 窗体中展示封装后的 WPF 日志控件。");
             _logger.AddInfo("点击“打开工厂 Demo”可以查看 ILoggerFactory 与 LoggerService 的接口用法演示。");
+            _logger.AddInfo("点击“打开文件 Demo”可以同时验证本地文件落盘和文件内容预览。");
             _logger.AddInfo("如果要直接跑封装控件压测，可执行：Logger.WinForms.Demo.exe --wpf-host --stress --close-after-stress");
             WriteLevelSamples();
             UpdateStatus("已加载等级示例");
+        }
+
+        private void WriteLogFilePath()
+        {
+            ILogFileSource fileSource = _logger as ILogFileSource;
+            if (fileSource == null || !fileSource.IsFileOutputEnabled || string.IsNullOrWhiteSpace(fileSource.LogFilePath))
+            {
+                return;
+            }
+
+            _logger.AddInfo("本地日志文件: " + fileSource.LogFilePath);
         }
 
         private void SampleButton_Click(object sender, EventArgs e)
@@ -224,6 +250,14 @@ namespace Logger.WinForms.Demo
             demoForm.Show(this);
             _logger.AddInfo("已打开独立日志源模式的 ILoggerFactory / LoggerService Demo。");
             UpdateStatus("已打开工厂 Demo");
+        }
+
+        private void OpenFileDemoButton_Click(object sender, EventArgs e)
+        {
+            FileLogDemoForm demoForm = new FileLogDemoForm();
+            demoForm.Show(this);
+            _logger.AddInfo("已打开本地日志文件 Demo。");
+            UpdateStatus("已打开文件 Demo");
         }
 
         private void WriteLevelSamples()
