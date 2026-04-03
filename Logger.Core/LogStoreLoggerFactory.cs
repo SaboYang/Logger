@@ -16,7 +16,13 @@ namespace Logger.Core
 
         public ILoggerOutput CreateLogger(string name)
         {
-            return new LogStore(name, _logRootDirectoryPath);
+            string loggerName = string.IsNullOrWhiteSpace(name) ? "Default" : name.Trim();
+            LoggerSessionInfo sessionInfo = new LoggerSessionInfo(loggerName);
+            LogStore logStore = new LogStore();
+            LogSessionBuffer sessionBuffer = new LogSessionBuffer(sessionInfo);
+            FileLogWriter fileLogWriter = new FileLogWriter(sessionInfo, _logRootDirectoryPath);
+
+            return new CompositeLogger(logStore, sessionBuffer, fileLogWriter, logStore, sessionBuffer, fileLogWriter);
         }
     }
 }

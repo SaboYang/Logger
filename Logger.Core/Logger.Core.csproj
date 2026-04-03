@@ -6,4 +6,8 @@
     <ProjectGuid>{7F2F6E48-FE78-4DC0-8314-03CE76A776BD}</ProjectGuid>
     <LangVersion>7.3</LangVersion>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="LogStore.cs" />
+  </ItemGroup>
 </Project>

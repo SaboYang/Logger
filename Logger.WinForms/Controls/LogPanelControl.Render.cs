@@ -240,7 +240,7 @@ namespace Logger.WinForms.Controls
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public LogStore LogStore
         {
-            get { return _currentLogger as LogStore; }
+            get { return _currentViewSource as LogStore; }
         }
 
         public void AddTrace(string message)

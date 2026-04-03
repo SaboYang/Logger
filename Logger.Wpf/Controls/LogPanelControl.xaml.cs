@@ -109,7 +109,7 @@ namespace Logger.Wpf.Controls
 
         public LogStore LogStore
         {
-            get { return Logger as LogStore; }
+            get { return _currentViewSource as LogStore; }
         }
 
         public void AddTrace(string message)
