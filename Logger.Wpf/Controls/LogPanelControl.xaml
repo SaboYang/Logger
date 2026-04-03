@@ -1,0 +1,329 @@
+﻿<UserControl x:Class="Logger.Wpf.Controls.LogPanelControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:converters="clr-namespace:Logger.Wpf.Converters"
+             mc:Ignorable="d"
+             d:DesignHeight="520"
+             d:DesignWidth="780"
+             UseLayoutRounding="True"
+             SnapsToDevicePixels="True">
+    <UserControl.Resources>
+        <converters:LogLevelToBrushConverter x:Key="LogLevelToBrushConverter" />
+
+        <LinearGradientBrush x:Key="PanelSurfaceBrush" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#FFFBFDFF" Offset="0" />
+            <GradientStop Color="#FFF2F7FC" Offset="1" />
+        </LinearGradientBrush>
+
+        <LinearGradientBrush x:Key="HeaderSurfaceBrush" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#FFFFFFFF" Offset="0" />
+            <GradientStop Color="#FFF3F8FE" Offset="1" />
+        </LinearGradientBrush>
+
+        <LinearGradientBrush x:Key="PrimaryButtonBrush" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#FF2563EB" Offset="0" />
+            <GradientStop Color="#FF1D4ED8" Offset="1" />
+        </LinearGradientBrush>
+
+        <SolidColorBrush x:Key="LogSurfaceBrush" Color="#FF0B1220" />
+        <SolidColorBrush x:Key="LogRowBrush" Color="#FF101A2A" />
+
+        <Style x:Key="HeaderActionButtonStyle" TargetType="Button">
+            <Setter Property="MinWidth" Value="88" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="FontFamily" Value="Microsoft YaHei UI" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="#FF0F172A" />
+            <Setter Property="Background" Value="#FFF8FBFF" />
+            <Setter Property="BorderBrush" Value="#FFD8E4F0" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ButtonBorder"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="9">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="Background" Value="#FFFFFFFF" />
+                                <Setter TargetName="ButtonBorder" Property="BorderBrush" Value="#FF94A3B8" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="Background" Value="#FFE8EEF7" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.58" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="PrimaryHeaderButtonStyle"
+               TargetType="Button"
+               BasedOn="{StaticResource HeaderActionButtonStyle}">
+            <Setter Property="Foreground" Value="#FFFFFFFF" />
+            <Setter Property="Background" Value="{StaticResource PrimaryButtonBrush}" />
+            <Setter Property="BorderBrush" Value="#FF1D4ED8" />
+        </Style>
+
+        <Style x:Key="DangerHeaderButtonStyle"
+               TargetType="Button"
+               BasedOn="{StaticResource HeaderActionButtonStyle}">
+            <Setter Property="Foreground" Value="#FF9F1239" />
+            <Setter Property="Background" Value="#FFFFF1F2" />
+            <Setter Property="BorderBrush" Value="#FFFBCDD3" />
+        </Style>
+
+        <Style x:Key="SearchClearButtonStyle"
+               TargetType="Button"
+               BasedOn="{StaticResource HeaderActionButtonStyle}">
+            <Setter Property="MinWidth" Value="24" />
+            <Setter Property="Width" Value="24" />
+            <Setter Property="Height" Value="24" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Foreground" Value="#FF64748B" />
+            <Setter Property="Background" Value="#00FFFFFF" />
+            <Setter Property="BorderBrush" Value="#00FFFFFF" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+
+        <Style TargetType="ListBoxItem">
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border Background="Transparent">
+                            <ContentPresenter />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Border Background="{StaticResource PanelSurfaceBrush}"
+            BorderBrush="#FFD7E2EC"
+            BorderThickness="1"
+            CornerRadius="14"
+            Padding="10">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="16"
+                              ShadowDepth="0"
+                              Opacity="0.10"
+                              Color="#FF0F172A" />
+        </Border.Effect>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="8" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0"
+                    Background="{StaticResource HeaderSurfaceBrush}"
+                    BorderBrush="#FFE2E8F0"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Padding="12,10">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="260" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Text="{Binding Header, RelativeSource={RelativeSource AncestorType=UserControl}}"
+             FontFamily="Microsoft YaHei UI"
+             FontSize="15"
+             FontWeight="SemiBold"
+             Foreground="#FF0F172A" />
+
+                    <Border Grid.Column="1"
+                            Margin="10,0,8,0"
+                            Padding="10,0,6,0"
+                            Height="32"
+                            VerticalAlignment="Center"
+                            Background="#FFFFFFFF"
+                            BorderBrush="#FFD8E4F0"
+                            BorderThickness="1"
+                            CornerRadius="10"
+                            ToolTip="Search by time, level, or message">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <Border Grid.Column="0"
+                                    VerticalAlignment="Center"
+                                    Padding="7,2"
+                                    Background="#FFEFF6FF"
+                                    CornerRadius="999">
+                                <TextBlock FontFamily="Microsoft YaHei UI"
+                                           FontSize="10"
+                                           FontWeight="SemiBold"
+                                           Foreground="#FF2563EB"
+                                           Text="Search" />
+                            </Border>
+
+                            <Grid Grid.Column="1"
+                                  Margin="8,0,6,0">
+                                <TextBox x:Name="SearchTextBox"
+                                         Background="Transparent"
+                                         BorderThickness="0"
+                                         FontFamily="Microsoft YaHei UI"
+                                         FontSize="11"
+                                         Foreground="#FF0F172A"
+                                         VerticalContentAlignment="Center"
+                                         Text="{Binding SearchText, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                                <TextBlock Margin="2,0,0,0"
+                                           VerticalAlignment="Center"
+                                           IsHitTestVisible="False"
+                                           FontFamily="Microsoft YaHei UI"
+                                           FontSize="11"
+                                           Foreground="#FF94A3B8"
+                                           Text="Search time / level / message">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Text, ElementName=SearchTextBox}" Value="">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding Text, ElementName=SearchTextBox}" Value="{x:Null}">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </Grid>
+
+                            <Button Grid.Column="2"
+                                    Content="X"
+                                    Click="SearchClearButton_Click">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource SearchClearButtonStyle}">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Text, ElementName=SearchTextBox}" Value="">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Text, ElementName=SearchTextBox}" Value="{x:Null}">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <StackPanel Grid.Column="2"
+                                Orientation="Horizontal"
+                                VerticalAlignment="Center">
+                        <Button x:Name="FilterButton"
+                                Margin="0,0,6,0"
+                                Content="Filter"
+                                Style="{StaticResource PrimaryHeaderButtonStyle}"
+                                Click="FilterButton_Click" />
+                        <Button Content="Clear View"
+                                Style="{StaticResource DangerHeaderButtonStyle}"
+                                Click="ClearButton_Click" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Border Grid.Row="2"
+                    Background="{StaticResource LogSurfaceBrush}"
+                    BorderBrush="#FF1E293B"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Padding="8">
+                <Grid>
+                    <ListBox x:Name="LogList"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             Foreground="#FFF8FAFC"
+                             HorizontalContentAlignment="Stretch"
+                             ScrollViewer.CanContentScroll="True"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             ScrollViewer.VerticalScrollBarVisibility="Auto"
+                             VirtualizingPanel.IsVirtualizing="True"
+                             VirtualizingPanel.VirtualizationMode="Recycling">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Border Margin="0,0,0,6"
+                                        Padding="8,7"
+                                        Background="{StaticResource LogRowBrush}"
+                                        BorderBrush="#FF1F2D40"
+                                        BorderThickness="1"
+                                        CornerRadius="10">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="96" />
+                                            <ColumnDefinition Width="80" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBlock Grid.Column="0"
+                                                   Margin="0"
+                                                   VerticalAlignment="Top"
+                                                   FontFamily="Consolas"
+                                                   FontSize="10"
+                                                   Foreground="#FF94A3B8"
+                                                   Text="{Binding Timestamp, StringFormat={}{0:HH:mm:ss.fff}}" />
+
+                                        <Border Grid.Column="1"
+                                                HorizontalAlignment="Left"
+                                                VerticalAlignment="Top"
+                                                Padding="7,2"
+                                                Background="#FF162235"
+                                                BorderBrush="#FF25324A"
+                                                BorderThickness="1"
+                                                CornerRadius="999">
+                                            <TextBlock FontFamily="Consolas"
+                                                       FontSize="10"
+                                                       FontWeight="Bold"
+                                                       Foreground="{Binding Level, Converter={StaticResource LogLevelToBrushConverter}}"
+                                                       Text="{Binding LevelText}" />
+                                        </Border>
+
+                                        <TextBlock Grid.Column="2"
+                                                   Margin="10,0,0,0"
+                                                   FontFamily="Microsoft YaHei UI"
+                                                   FontSize="11"
+                                                   Foreground="#FFF8FAFC"
+                                                   LineHeight="18"
+                                                   Text="{Binding Message}"
+                                                   TextWrapping="Wrap" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+</UserControl>
+

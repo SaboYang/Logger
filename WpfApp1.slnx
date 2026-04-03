@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="Logger.Core/Logger.Core.csproj" Id="7f2f6e48-fe78-4dc0-8314-03ce76a776bd" />
+  <Project Path="Logger.WinForms.Demo/Logger.WinForms.Demo.csproj" Id="87de7a79-c253-4997-8180-cc7ad32c75d0" />
+  <Project Path="Logger.WinForms/Logger.WinForms.csproj" Id="e0fe38c9-3511-474a-9c2e-6833d97d951d" />
+  <Project Path="Logger.Wpf/Logger.Wpf.csproj" Id="29064b1b-2c11-4604-80b2-bd26a7595b7d" />
+  <Project Path="WpfApp1/WpfApp1.csproj" Id="b3d3c88d-c2b2-4306-96eb-0af2ffb9988e" />
+</Solution>

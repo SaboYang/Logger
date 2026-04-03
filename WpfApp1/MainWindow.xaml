@@ -1,0 +1,192 @@
+﻿<Window x:Class="WpfApp1.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:controls="clr-namespace:Logger.Wpf.Controls;assembly=Logger.Wpf"
+        mc:Ignorable="d"
+        Title="Logger WPF Showcase"
+        Height="720"
+        Width="1080"
+        MinHeight="560"
+        MinWidth="860"
+        Background="#FFF5F8FC">
+    <Window.Resources>
+        <LinearGradientBrush x:Key="WindowBackgroundBrush" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#FFF7FAFD" Offset="0" />
+            <GradientStop Color="#FFEDF4FB" Offset="1" />
+        </LinearGradientBrush>
+
+        <LinearGradientBrush x:Key="HeroBrush" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#FF0F172A" Offset="0" />
+            <GradientStop Color="#FF1E3A8A" Offset="1" />
+        </LinearGradientBrush>
+
+        <LinearGradientBrush x:Key="PrimaryButtonBrush" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#FF38BDF8" Offset="0" />
+            <GradientStop Color="#FF2563EB" Offset="1" />
+        </LinearGradientBrush>
+
+        <Style x:Key="PrimaryActionButtonStyle" TargetType="Button">
+            <Setter Property="Height" Value="38" />
+            <Setter Property="MinWidth" Value="132" />
+            <Setter Property="Padding" Value="14,0" />
+            <Setter Property="FontFamily" Value="Microsoft YaHei UI" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="Background" Value="{StaticResource PrimaryButtonBrush}" />
+            <Setter Property="BorderBrush" Value="#332563EB" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="ButtonBorder"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="12">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="Opacity" Value="0.92" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="ButtonBorder" Property="Opacity" Value="0.84" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.55" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="InfoChipStyle" TargetType="Border">
+            <Setter Property="Margin" Value="0,0,8,8" />
+            <Setter Property="Padding" Value="10,4" />
+            <Setter Property="Background" Value="#18FFFFFF" />
+            <Setter Property="BorderBrush" Value="#22FFFFFF" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="999" />
+        </Style>
+    </Window.Resources>
+
+    <Grid Background="{StaticResource WindowBackgroundBrush}">
+        <Canvas IsHitTestVisible="False">
+            <Ellipse Width="420"
+                     Height="420"
+                     Fill="#1A60A5FA"
+                     Canvas.Left="-110"
+                     Canvas.Top="-100" />
+            <Ellipse Width="360"
+                     Height="360"
+                     Fill="#146EE7B7"
+                     Canvas.Right="-90"
+                     Canvas.Top="40" />
+        </Canvas>
+
+        <Grid Margin="14">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="10" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0"
+                    Background="{StaticResource HeroBrush}"
+                    CornerRadius="18"
+                    Padding="18,16">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="20"
+                                      ShadowDepth="0"
+                                      Opacity="0.14"
+                                      Color="#FF0F172A" />
+                </Border.Effect>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="220" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0"
+                                VerticalAlignment="Center">
+                        <TextBlock FontFamily="Microsoft YaHei UI"
+                                   FontSize="24"
+                                   FontWeight="Bold"
+                                   Foreground="White"
+                                   Text="Logger WPF Console" />
+                        <TextBlock Margin="0,10,0,0"
+                                   FontFamily="Microsoft YaHei UI"
+                                   FontSize="12"
+                                   Foreground="#D8E7FF"
+                                   Text="Bind ILoggerOutput once, write logs to the interface, and let the control handle rendering, search, filtering, and stress output."
+                                   TextWrapping="Wrap" />
+
+                        <WrapPanel Margin="0,12,0,0">
+                            <Border Style="{StaticResource InfoChipStyle}">
+                                <TextBlock FontFamily="Microsoft YaHei UI"
+                                           FontSize="10"
+                                           Foreground="White"
+                                           Text="30000 item stress run" />
+                            </Border>
+                            <Border Style="{StaticResource InfoChipStyle}">
+                                <TextBlock FontFamily="Microsoft YaHei UI"
+                                           FontSize="10"
+                                           Foreground="White"
+                                           Text="Search and level filter" />
+                            </Border>
+                            <Border Style="{StaticResource InfoChipStyle}">
+                                <TextBlock FontFamily="Microsoft YaHei UI"
+                                           FontSize="10"
+                                           Foreground="White"
+                                           Text="ILoggerOutput binding" />
+                            </Border>
+                        </WrapPanel>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1"
+                                VerticalAlignment="Center">
+                        <Button x:Name="BtnStressTest"
+                                Content="Run Stress Test"
+                                Style="{StaticResource PrimaryActionButtonStyle}"
+                                Click="BtnStressTest_Click" />
+
+                        <Border Margin="0,10,0,0"
+                                Padding="12,10"
+                                Background="#14FFFFFF"
+                                BorderBrush="#22FFFFFF"
+                                BorderThickness="1"
+                                CornerRadius="14">
+                            <StackPanel>
+                                <TextBlock FontFamily="Microsoft YaHei UI"
+                                           FontSize="10"
+                                           Foreground="#BFD5FF"
+                                           Text="Status" />
+                                <TextBlock x:Name="TxtStatus"
+                                           Margin="0,6,0,0"
+                                           FontFamily="Microsoft YaHei UI"
+                                           FontSize="12"
+                                           FontWeight="SemiBold"
+                                           Foreground="White"
+                                           Text="Ready"
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <controls:LogPanelControl Grid.Row="2"
+                                      x:Name="LogViewer"
+                                      Header="Application Logs"
+                                      MaxLogEntries="5000" />
+        </Grid>
+    </Grid>
+</Window>
+

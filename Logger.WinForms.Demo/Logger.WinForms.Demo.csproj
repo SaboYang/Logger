@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <OutputType>WinExe</OutputType>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>Logger.WinForms.Demo</AssemblyName>
+    <RootNamespace>Logger.WinForms.Demo</RootNamespace>
+    <ProjectGuid>{87DE7A79-C253-4997-8180-CC7AD32C75D0}</ProjectGuid>
+    <LangVersion>7.3</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Logger.WinForms\Logger.WinForms.csproj" />
+  </ItemGroup>
+</Project>
