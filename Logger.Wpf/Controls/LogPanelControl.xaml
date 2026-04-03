@@ -31,11 +31,11 @@
         <SolidColorBrush x:Key="LogRowBrush" Color="#FF101A2A" />
 
         <Style x:Key="HeaderActionButtonStyle" TargetType="Button">
-            <Setter Property="MinWidth" Value="88" />
-            <Setter Property="Height" Value="32" />
-            <Setter Property="Padding" Value="12,0" />
+            <Setter Property="MinWidth" Value="78" />
+            <Setter Property="Height" Value="28" />
+            <Setter Property="Padding" Value="10,0" />
             <Setter Property="FontFamily" Value="Microsoft YaHei UI" />
-            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontSize" Value="11" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Foreground" Value="#FF0F172A" />
             <Setter Property="Background" Value="#FFF8FBFF" />
@@ -78,6 +78,18 @@
             <Setter Property="BorderBrush" Value="#FF1D4ED8" />
         </Style>
 
+        <Style x:Key="FilterHeaderButtonStyle"
+               TargetType="Button"
+               BasedOn="{StaticResource HeaderActionButtonStyle}">
+            <Style.Triggers>
+                <Trigger Property="Tag" Value="True">
+                    <Setter Property="Foreground" Value="#FFFFFFFF" />
+                    <Setter Property="Background" Value="{StaticResource PrimaryButtonBrush}" />
+                    <Setter Property="BorderBrush" Value="#FF1D4ED8" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
         <Style x:Key="DangerHeaderButtonStyle"
                TargetType="Button"
                BasedOn="{StaticResource HeaderActionButtonStyle}">
@@ -89,20 +101,21 @@
         <Style x:Key="SearchClearButtonStyle"
                TargetType="Button"
                BasedOn="{StaticResource HeaderActionButtonStyle}">
-            <Setter Property="MinWidth" Value="24" />
-            <Setter Property="Width" Value="24" />
-            <Setter Property="Height" Value="24" />
+            <Setter Property="MinWidth" Value="20" />
+            <Setter Property="Width" Value="20" />
+            <Setter Property="Height" Value="20" />
             <Setter Property="Padding" Value="0" />
             <Setter Property="Foreground" Value="#FF64748B" />
             <Setter Property="Background" Value="#00FFFFFF" />
             <Setter Property="BorderBrush" Value="#00FFFFFF" />
-            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontSize" Value="10" />
             <Setter Property="FontWeight" Value="Bold" />
         </Style>
 
         <Style TargetType="ListBoxItem">
             <Setter Property="Padding" Value="0" />
             <Setter Property="Margin" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
             <Setter Property="Template">
@@ -120,8 +133,8 @@
     <Border Background="{StaticResource PanelSurfaceBrush}"
             BorderBrush="#FFD7E2EC"
             BorderThickness="1"
-            CornerRadius="14"
-            Padding="10">
+            CornerRadius="12"
+            Padding="8">
         <Border.Effect>
             <DropShadowEffect BlurRadius="16"
                               ShadowDepth="0"
@@ -132,7 +145,7 @@
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="8" />
+                <RowDefinition Height="6" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
@@ -140,30 +153,30 @@
                     Background="{StaticResource HeaderSurfaceBrush}"
                     BorderBrush="#FFE2E8F0"
                     BorderThickness="1"
-                    CornerRadius="12"
-                    Padding="12,10">
+                    CornerRadius="10"
+                    Padding="8,7">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="260" />
+                        <ColumnDefinition Width="230" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
                     <TextBlock Text="{Binding Header, RelativeSource={RelativeSource AncestorType=UserControl}}"
              FontFamily="Microsoft YaHei UI"
-             FontSize="15"
+             FontSize="14"
              FontWeight="SemiBold"
              Foreground="#FF0F172A" />
 
                     <Border Grid.Column="1"
-                            Margin="10,0,8,0"
-                            Padding="10,0,6,0"
-                            Height="32"
+                            Margin="8,0,6,0"
+                            Padding="8,0,4,0"
+                            Height="28"
                             VerticalAlignment="Center"
                             Background="#FFFFFFFF"
                             BorderBrush="#FFD8E4F0"
                             BorderThickness="1"
-                            CornerRadius="10"
+                            CornerRadius="9"
                             ToolTip="Search by time, level, or message">
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -174,7 +187,7 @@
 
                             <Border Grid.Column="0"
                                     VerticalAlignment="Center"
-                                    Padding="7,2"
+                                    Padding="6,2"
                                     Background="#FFEFF6FF"
                                     CornerRadius="999">
                                 <TextBlock FontFamily="Microsoft YaHei UI"
@@ -185,12 +198,12 @@
                             </Border>
 
                             <Grid Grid.Column="1"
-                                  Margin="8,0,6,0">
+                                  Margin="6,0,4,0">
                                 <TextBox x:Name="SearchTextBox"
                                          Background="Transparent"
                                          BorderThickness="0"
                                          FontFamily="Microsoft YaHei UI"
-                                         FontSize="11"
+                                         FontSize="10"
                                          Foreground="#FF0F172A"
                                          VerticalContentAlignment="Center"
                                          Text="{Binding SearchText, RelativeSource={RelativeSource AncestorType=UserControl}, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
@@ -199,7 +212,7 @@
                                            VerticalAlignment="Center"
                                            IsHitTestVisible="False"
                                            FontFamily="Microsoft YaHei UI"
-                                           FontSize="11"
+                                           FontSize="10"
                                            Foreground="#FF94A3B8"
                                            Text="Search time / level / message">
                                     <TextBlock.Style>
@@ -242,9 +255,9 @@
                                 Orientation="Horizontal"
                                 VerticalAlignment="Center">
                         <Button x:Name="FilterButton"
-                                Margin="0,0,6,0"
+                                Margin="0,0,4,0"
                                 Content="Filter"
-                                Style="{StaticResource PrimaryHeaderButtonStyle}"
+                                Style="{StaticResource FilterHeaderButtonStyle}"
                                 Click="FilterButton_Click" />
                         <Button Content="Clear View"
                                 Style="{StaticResource DangerHeaderButtonStyle}"
@@ -257,14 +270,15 @@
                     Background="{StaticResource LogSurfaceBrush}"
                     BorderBrush="#FF1E293B"
                     BorderThickness="1"
-                    CornerRadius="12"
-                    Padding="8">
+                    CornerRadius="10"
+                    Padding="6">
                 <Grid>
                     <ListBox x:Name="LogList"
                              Background="Transparent"
                              BorderThickness="0"
                              Foreground="#FFF8FAFC"
                              HorizontalContentAlignment="Stretch"
+                             SelectionMode="Single"
                              ScrollViewer.CanContentScroll="True"
                              ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                              ScrollViewer.VerticalScrollBarVisibility="Auto"
@@ -272,52 +286,71 @@
                              VirtualizingPanel.VirtualizationMode="Recycling">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <Border Margin="0,0,0,6"
-                                        Padding="8,7"
+                                <Border x:Name="ItemBorder"
+                                        Margin="0,0,0,4"
+                                        Padding="6,5"
                                         Background="{StaticResource LogRowBrush}"
                                         BorderBrush="#FF1F2D40"
                                         BorderThickness="1"
-                                        CornerRadius="10">
+                                        CornerRadius="9">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="96" />
-                                            <ColumnDefinition Width="80" />
+                                            <ColumnDefinition Width="90" />
+                                            <ColumnDefinition Width="74" />
                                             <ColumnDefinition Width="*" />
                                         </Grid.ColumnDefinitions>
 
-                                        <TextBlock Grid.Column="0"
+                                        <TextBlock x:Name="TimeText"
+                                                   Grid.Column="0"
                                                    Margin="0"
                                                    VerticalAlignment="Top"
                                                    FontFamily="Consolas"
-                                                   FontSize="10"
+                                                   FontSize="9.5"
                                                    Foreground="#FF94A3B8"
                                                    Text="{Binding Timestamp, StringFormat={}{0:HH:mm:ss.fff}}" />
 
-                                        <Border Grid.Column="1"
+                                        <Border x:Name="LevelBadge"
+                                                Grid.Column="1"
                                                 HorizontalAlignment="Left"
                                                 VerticalAlignment="Top"
-                                                Padding="7,2"
+                                                Padding="6,1"
                                                 Background="#FF162235"
                                                 BorderBrush="#FF25324A"
                                                 BorderThickness="1"
                                                 CornerRadius="999">
                                             <TextBlock FontFamily="Consolas"
-                                                       FontSize="10"
+                                                       FontSize="9.5"
                                                        FontWeight="Bold"
                                                        Foreground="{Binding Level, Converter={StaticResource LogLevelToBrushConverter}}"
                                                        Text="{Binding LevelText}" />
                                         </Border>
 
-                                        <TextBlock Grid.Column="2"
-                                                   Margin="10,0,0,0"
+                                        <TextBlock x:Name="MessageText"
+                                                   Grid.Column="2"
+                                                   Margin="8,0,0,0"
                                                    FontFamily="Microsoft YaHei UI"
-                                                   FontSize="11"
+                                                   FontSize="10"
                                                    Foreground="#FFF8FAFC"
-                                                   LineHeight="18"
+                                                   LineHeight="16"
                                                    Text="{Binding Message}"
                                                    TextWrapping="Wrap" />
                                     </Grid>
                                 </Border>
+                                <DataTemplate.Triggers>
+                                    <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                        <Setter TargetName="ItemBorder" Property="Background" Value="#FF132035" />
+                                        <Setter TargetName="ItemBorder" Property="BorderBrush" Value="#FF2B415D" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
+                                        <Setter TargetName="ItemBorder" Property="Background" Value="#FF162742" />
+                                        <Setter TargetName="ItemBorder" Property="BorderBrush" Value="#FF3B82F6" />
+                                        <Setter TargetName="LevelBadge" Property="Background" Value="#FF1B3353" />
+                                        <Setter TargetName="LevelBadge" Property="BorderBrush" Value="#FF335D97" />
+                                        <Setter TargetName="TimeText" Property="Foreground" Value="#FFD5E2F2" />
+                                        <Setter TargetName="MessageText" Property="Foreground" Value="#FFFFFFFF" />
+                                        <Setter TargetName="MessageText" Property="FontWeight" Value="SemiBold" />
+                                    </DataTrigger>
+                                </DataTemplate.Triggers>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>

@@ -488,6 +488,8 @@ namespace Logger.Wpf.Controls
                 Placement = PlacementMode.Bottom,
                 StaysOpen = true
             };
+            _filterMenu.Opened += FilterMenu_Opened;
+            _filterMenu.Closed += FilterMenu_Closed;
 
             _filterMenu.Items.Add(CreateCommandMenuItem("全选", SelectAllFilterMenuItem_Click));
             _filterMenu.Items.Add(CreateCommandMenuItem("全不选", ClearAllFilterMenuItem_Click));
@@ -529,6 +531,7 @@ namespace Logger.Wpf.Controls
             }
 
             FilterButton.Content = GetFilterButtonText();
+            FilterButton.Tag = IsFilterHighlighted();
 
             if (_filterMenuItems.Count == 0)
             {
@@ -581,6 +584,23 @@ namespace Logger.Wpf.Controls
             }
 
             return count;
+        }
+
+        private bool IsFilterHighlighted()
+        {
+            int selectedCount = GetSelectedLevelCount();
+            bool isFilterActive = selectedCount > 0 && selectedCount < FilterLevels.Length;
+            return isFilterActive || (_filterMenu != null && _filterMenu.IsOpen);
+        }
+
+        private void FilterMenu_Opened(object sender, RoutedEventArgs e)
+        {
+            UpdateFilterUi();
+        }
+
+        private void FilterMenu_Closed(object sender, RoutedEventArgs e)
+        {
+            UpdateFilterUi();
         }
 
         private static string GetLevelDisplayText(LogLevel level)

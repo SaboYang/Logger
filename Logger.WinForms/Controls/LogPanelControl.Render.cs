@@ -13,6 +13,8 @@ namespace Logger.WinForms.Controls
     [DesignerCategory("Code")]
     public class LogPanelControl : UserControl
     {
+        private const int SearchRefreshDelayMilliseconds = 180;
+
         private static readonly LogLevel[] FilterLevels =
         {
             LogLevel.Trace,
@@ -31,10 +33,13 @@ namespace Logger.WinForms.Controls
         private readonly Button _filterButton;
         private readonly Button _clearButton;
         private readonly ContextMenuStrip _filterMenu;
+        private readonly System.Windows.Forms.Timer _searchRefreshTimer;
         private readonly LogGridView _logGrid;
         private readonly Font _levelFont;
         private bool _refreshPending;
-        private int _refreshQueued;
+        private int _refreshWorkerRunning;
+        private int _refreshVersion;
+        private int _appliedRefreshVersion;
         private bool _updatingFilterMenu;
         private bool _updatingSearchText;
         private string _header = "\u8fd0\u884c\u65e5\u5fd7";
@@ -74,6 +79,11 @@ namespace Logger.WinForms.Controls
             };
 
             _filterMenu = BuildFilterMenu();
+            _searchRefreshTimer = new System.Windows.Forms.Timer
+            {
+                Interval = SearchRefreshDelayMilliseconds
+            };
+            _searchRefreshTimer.Tick += SearchRefreshTimer_Tick;
 
             _searchTextBox = new TextBox
             {
@@ -163,7 +173,7 @@ namespace Logger.WinForms.Controls
 
                     _searchText = nextText;
                     UpdateSearchUi();
-                    ScheduleRefresh();
+                    ScheduleSearchRefresh();
                 });
             }
         }
@@ -289,7 +299,7 @@ namespace Logger.WinForms.Controls
             ExecuteOnUiThread(() =>
             {
                 _clearAnchorEntry = GetLatestSourceEntry();
-                RefreshView();
+                ScheduleRefresh();
             });
         }
 
@@ -322,7 +332,7 @@ namespace Logger.WinForms.Controls
             if (_refreshPending || GetCurrentEntryCount() > 0)
             {
                 _refreshPending = false;
-                RefreshView();
+                ScheduleRefresh();
             }
         }
 
@@ -336,6 +346,8 @@ namespace Logger.WinForms.Controls
                 }
 
                 _searchTextBox.TextChanged -= SearchTextBox_TextChanged;
+                _searchRefreshTimer.Tick -= SearchRefreshTimer_Tick;
+                _searchRefreshTimer.Stop();
                 _filterButton.Click -= FilterButton_Click;
                 _clearButton.Click -= ClearButton_Click;
                 _logGrid.CellFormatting -= LogGrid_CellFormatting;
@@ -345,6 +357,7 @@ namespace Logger.WinForms.Controls
                     item.Click -= FilterMenuItem_Click;
                 }
                 _filterMenu.Dispose();
+                _searchRefreshTimer.Dispose();
                 _levelFont.Dispose();
                 _searchTextBox.Font.Dispose();
                 _headerLabel.Font.Dispose();
@@ -551,55 +564,104 @@ namespace Logger.WinForms.Controls
                 return;
             }
 
+            Interlocked.Increment(ref _refreshVersion);
+
             if (!IsHandleCreated)
             {
                 _refreshPending = true;
                 return;
             }
 
-            if (Interlocked.Exchange(ref _refreshQueued, 1) == 1)
+            StartRefreshWorker();
+        }
+
+        private void StartRefreshWorker()
+        {
+            if (Interlocked.CompareExchange(ref _refreshWorkerRunning, 1, 0) != 0)
             {
                 return;
             }
 
-            try
+            ThreadPool.QueueUserWorkItem(_ =>
             {
-                BeginInvoke(new Action(PerformScheduledRefresh));
-            }
-            catch (ObjectDisposedException)
+                try
+                {
+                    RunRefreshWorker();
+                }
+                finally
+                {
+                    Interlocked.Exchange(ref _refreshWorkerRunning, 0);
+
+                    if (!IsDisposed &&
+                        !Disposing &&
+                        IsHandleCreated &&
+                        Volatile.Read(ref _appliedRefreshVersion) != Volatile.Read(ref _refreshVersion))
+                    {
+                        StartRefreshWorker();
+                    }
+                }
+            });
+        }
+
+        private void RunRefreshWorker()
+        {
+            while (!IsDisposed && !Disposing)
             {
-                Interlocked.Exchange(ref _refreshQueued, 0);
-            }
-            catch (InvalidOperationException)
-            {
-                Interlocked.Exchange(ref _refreshQueued, 0);
+                int requestedVersion = Volatile.Read(ref _refreshVersion);
+                IList<LogEntry> visibleEntries = SnapshotCurrentEntries();
+                int latestVersion = Volatile.Read(ref _refreshVersion);
+
+                if (IsDisposed || Disposing)
+                {
+                    return;
+                }
+
+                if (requestedVersion != latestVersion)
+                {
+                    continue;
+                }
+
+                try
+                {
+                    BeginInvoke(new Action(() => ApplyVisibleEntries(visibleEntries, requestedVersion)));
+                }
+                catch (ObjectDisposedException)
+                {
+                    _refreshPending = true;
+                    return;
+                }
+                catch (InvalidOperationException)
+                {
+                    _refreshPending = true;
+                    return;
+                }
+
+                if (requestedVersion == Volatile.Read(ref _refreshVersion))
+                {
+                    return;
+                }
             }
         }
 
-        private void PerformScheduledRefresh()
+        private void ApplyVisibleEntries(IList<LogEntry> visibleEntries, int refreshVersion)
         {
-            Interlocked.Exchange(ref _refreshQueued, 0);
-
             if (IsDisposed || Disposing || !IsHandleCreated)
             {
                 _refreshPending = true;
                 return;
             }
 
-            _refreshPending = false;
-            RefreshView();
-        }
-
-        private void RefreshView()
-        {
-            if (IsDisposed || Disposing || !IsHandleCreated)
+            int latestVersion = Volatile.Read(ref _refreshVersion);
+            if (refreshVersion != latestVersion ||
+                refreshVersion < Volatile.Read(ref _appliedRefreshVersion))
             {
                 return;
             }
 
-            _visibleEntries = SnapshotCurrentEntries();
+            _refreshPending = false;
+            Volatile.Write(ref _appliedRefreshVersion, refreshVersion);
+            _visibleEntries = visibleEntries ?? Array.Empty<LogEntry>();
             _logGrid.RowCount = _visibleEntries.Count;
-            _logGrid.AutoResizeRows(DataGridViewAutoSizeRowsMode.DisplayedCellsExceptHeaders);
             _logGrid.Invalidate();
             _logGrid.ClearSelection();
 
@@ -722,6 +784,12 @@ namespace Logger.WinForms.Controls
             SearchText = _searchTextBox.Text;
         }
 
+        private void SearchRefreshTimer_Tick(object sender, EventArgs e)
+        {
+            _searchRefreshTimer.Stop();
+            ScheduleRefresh();
+        }
+
         private void ClearButton_Click(object sender, EventArgs e)
         {
             ClearLogs();
@@ -774,25 +842,30 @@ namespace Logger.WinForms.Controls
 
         private IList<LogEntry> SnapshotCurrentEntries()
         {
-            if (_currentViewSource == null)
+            ILogViewSource viewSource = _currentViewSource;
+            if (viewSource == null)
             {
                 return Array.Empty<LogEntry>();
             }
 
-            lock (_currentViewSource.SyncRoot)
+            LogEntry clearAnchorEntry = _clearAnchorEntry;
+            LogLevelFilter levelFilter = _levelFilter;
+            string searchText = NormalizeSearchText(_searchText);
+
+            lock (viewSource.SyncRoot)
             {
-                int startIndex = GetVisibleStartIndex();
-                int visibleCount = _currentViewSource.Entries.Count - startIndex;
+                int startIndex = GetVisibleStartIndex(viewSource, clearAnchorEntry);
+                int visibleCount = viewSource.Entries.Count - startIndex;
                 if (visibleCount <= 0)
                 {
                     return Array.Empty<LogEntry>();
                 }
 
                 List<LogEntry> snapshot = new List<LogEntry>(visibleCount);
-                for (int index = startIndex; index < _currentViewSource.Entries.Count; index++)
+                for (int index = startIndex; index < viewSource.Entries.Count; index++)
                 {
-                    LogEntry entry = _currentViewSource.Entries[index];
-                    if (ShouldDisplayEntry(entry))
+                    LogEntry entry = viewSource.Entries[index];
+                    if (ShouldDisplayEntry(entry, levelFilter, searchText))
                     {
                         snapshot.Add(entry);
                     }
@@ -804,16 +877,20 @@ namespace Logger.WinForms.Controls
 
         private int GetVisibleEntryCount()
         {
-            if (_currentViewSource == null)
+            ILogViewSource viewSource = _currentViewSource;
+            if (viewSource == null)
             {
                 return 0;
             }
 
-            int startIndex = GetVisibleStartIndex();
+            LogEntry clearAnchorEntry = _clearAnchorEntry;
+            LogLevelFilter levelFilter = _levelFilter;
+            string searchText = NormalizeSearchText(_searchText);
+            int startIndex = GetVisibleStartIndex(viewSource, clearAnchorEntry);
             int visibleCount = 0;
-            for (int index = startIndex; index < _currentViewSource.Entries.Count; index++)
+            for (int index = startIndex; index < viewSource.Entries.Count; index++)
             {
-                if (ShouldDisplayEntry(_currentViewSource.Entries[index]))
+                if (ShouldDisplayEntry(viewSource.Entries[index], levelFilter, searchText))
                 {
                     visibleCount++;
                 }
@@ -822,16 +899,16 @@ namespace Logger.WinForms.Controls
             return visibleCount;
         }
 
-        private int GetVisibleStartIndex()
+        private static int GetVisibleStartIndex(ILogViewSource viewSource, LogEntry clearAnchorEntry)
         {
-            if (_clearAnchorEntry == null || _currentViewSource == null)
+            if (clearAnchorEntry == null || viewSource == null)
             {
                 return 0;
             }
 
-            for (int index = _currentViewSource.Entries.Count - 1; index >= 0; index--)
+            for (int index = viewSource.Entries.Count - 1; index >= 0; index--)
             {
-                if (ReferenceEquals(_currentViewSource.Entries[index], _clearAnchorEntry))
+                if (ReferenceEquals(viewSource.Entries[index], clearAnchorEntry))
                 {
                     return index + 1;
                 }
@@ -868,14 +945,30 @@ namespace Logger.WinForms.Controls
             return _visibleEntries[rowIndex];
         }
 
-        private bool ShouldDisplayEntry(LogEntry entry)
+        private void ScheduleSearchRefresh()
         {
-            return entry != null && LevelFilter.Includes(entry.Level) && MatchesSearch(entry);
+            if (IsDisposed || Disposing)
+            {
+                return;
+            }
+
+            if (!IsHandleCreated)
+            {
+                _refreshPending = true;
+                return;
+            }
+
+            _searchRefreshTimer.Stop();
+            _searchRefreshTimer.Start();
         }
 
-        private bool MatchesSearch(LogEntry entry)
+        private static bool ShouldDisplayEntry(LogEntry entry, LogLevelFilter levelFilter, string searchText)
         {
-            string searchText = NormalizeSearchText(SearchText);
+            return entry != null && levelFilter.Includes(entry.Level) && MatchesSearch(entry, searchText);
+        }
+
+        private static bool MatchesSearch(LogEntry entry, string searchText)
+        {
             if (string.IsNullOrEmpty(searchText))
             {
                 return true;
