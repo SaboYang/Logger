@@ -417,7 +417,9 @@ ILoggerFactory factory = new LogStoreLoggerFactory(
     logRootDirectoryPath: null,
     minimumLevel: LogLevel.Warn,
     maxBufferedSessionEntries: 5000,
-    maxPendingStorageEntries: 5000);
+    maxPendingStorageEntries: 5000,
+    spoolRootDirectoryPath: @"D:\LogSpool",
+    spoolFlushMode: LogSpoolFlushMode.Buffered);
 
 ILoggerService service = new LoggerService(factory);
 LogManager.Configure(service);
@@ -432,7 +434,10 @@ logger.AddError("这条会写入 logger");
 - 这里的 `minimumLevel` 配置的是 factory 创建出来的 logger 入口等级
 - 不是给存储后端单独再加一层过滤
 - `maxBufferedSessionEntries` 用来限制 `ILogSessionSource` 在内存中保留的会话快照大小
-- `maxPendingStorageEntries` 用来限制后台存储队列的内存占用，队列打满时会对写入端施加背压，不默认丢日志
+- `maxPendingStorageEntries` 用来限制后台每次从本地 `spool/WAL` 读取并转存的批量大小
+- `spoolRootDirectoryPath` 用来指定本地 `spool/WAL` 目录；不传时默认是 `AppContext.BaseDirectory\\LogSpool`
+- `spoolFlushMode` 默认是 `Buffered`，优先日志吞吐；切到 `LogSpoolFlushMode.Durable` 会在每批写入后强制刷盘，代价是吞吐显著下降
+- 当前持久化语义是 `at-least-once`：如果进程在“后端写成功”和“WAL checkpoint 更新”之间崩溃，恢复后可能出现极小窗口的重复重放
 
 ### 9.3 自定义全局服务
 
@@ -505,7 +510,9 @@ var factory = new LogStoreLoggerFactory(
     new DbLogStorageBackendFactory("Data Source=.;Initial Catalog=LoggerDb;Integrated Security=True"),
     minimumLevel: LogLevel.Trace,
     maxBufferedSessionEntries: 5000,
-    maxPendingStorageEntries: 5000);
+    maxPendingStorageEntries: 5000,
+    spoolRootDirectoryPath: @"D:\LogSpool",
+    spoolFlushMode: LogSpoolFlushMode.Buffered);
 
 LogManager.Configure(new LoggerService(factory));
 
@@ -542,7 +549,9 @@ var factory = new LogStoreLoggerFactory(
         LogFileRollingMode.Week),
     minimumLevel: LogLevel.Trace,
     maxBufferedSessionEntries: 5000,
-    maxPendingStorageEntries: 5000);
+    maxPendingStorageEntries: 5000,
+    spoolRootDirectoryPath: @"D:\LogSpool",
+    spoolFlushMode: LogSpoolFlushMode.Buffered);
 
 LogManager.Configure(new LoggerService(factory));
 
@@ -561,7 +570,9 @@ var factory = new LogStoreLoggerFactory(
     minimumLevel: LogLevel.Trace,
     rollingMode: LogFileRollingMode.Month,
     maxBufferedSessionEntries: 5000,
-    maxPendingStorageEntries: 5000);
+    maxPendingStorageEntries: 5000,
+    spoolRootDirectoryPath: @"D:\LogSpool",
+    spoolFlushMode: LogSpoolFlushMode.Buffered);
 
 LogManager.Configure(new LoggerService(factory));
 

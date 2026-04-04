@@ -8,22 +8,30 @@ namespace Logger.Core
 {
     internal sealed class StorageLogWriter : ILoggerOutput, ILogRuntimeMetricsSource, IDisposable
     {
-        private readonly ConcurrentQueue<LogEntry> _pendingEntries = new ConcurrentQueue<LogEntry>();
+        private const int CapacityWaitMilliseconds = 5;
+
         private readonly LogStorageContext _context;
         private readonly ILogStorageBackend _storageBackend;
-        private readonly int _maxPendingEntries;
-        private readonly SemaphoreSlim _pendingCapacitySignal;
+        private readonly FileLogWalSpool _spool;
+        private readonly int _maxReplayBatchSize;
+        private readonly int _maxSpoolWriteBatchEntries;
+        private readonly int _maxPendingSpoolEntries;
+        private readonly ConcurrentQueue<PendingSpoolBatch> _pendingSpoolBatches = new ConcurrentQueue<PendingSpoolBatch>();
+        private readonly AutoResetEvent _spoolSignal = new AutoResetEvent(false);
+        private readonly AutoResetEvent _spoolCapacitySignal = new AutoResetEvent(false);
+        private int _spoolWorkerRunning;
+        private int _pendingSpoolEntryCount;
         private int _flushWorkerRunning;
-        private int _outputFaulted;
-        private int _pendingEntryCount;
         private int _disposed;
 
         public StorageLogWriter(LogStorageContext context, ILogStorageBackend storageBackend)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
             _storageBackend = storageBackend ?? throw new ArgumentNullException(nameof(storageBackend));
-            _maxPendingEntries = _context.MaxPendingStorageEntries;
-            _pendingCapacitySignal = new SemaphoreSlim(_maxPendingEntries, _maxPendingEntries);
+            _spool = new FileLogWalSpool(_context);
+            _maxReplayBatchSize = _context.MaxPendingStorageEntries;
+            _maxSpoolWriteBatchEntries = Math.Max(_context.MaxPendingStorageEntries * 4, 4000);
+            _maxPendingSpoolEntries = Math.Max(_maxSpoolWriteBatchEntries * 8, 32000);
         }
 
         public void SetMinimumLevel(LogLevel minimumLevel)
@@ -79,19 +87,19 @@ namespace Logger.Core
         {
             string normalizedMessage = LogEntrySanitizer.NormalizeMessage(message);
             if (normalizedMessage == null
-                || Volatile.Read(ref _disposed) != 0
-                || Volatile.Read(ref _outputFaulted) != 0)
+                || Volatile.Read(ref _disposed) != 0)
             {
                 return;
             }
 
-            EnqueueEntries(new[] { new LogEntry(DateTime.Now, level, normalizedMessage) });
+            AppendEntries(
+                new[] { new LogEntry(DateTime.Now, level, normalizedMessage) },
+                RequiresDurableSpool(level));
         }
 
         public void AddLogs(IEnumerable<LogEntry> entries)
         {
-            if (Volatile.Read(ref _disposed) != 0
-                || Volatile.Read(ref _outputFaulted) != 0)
+            if (Volatile.Read(ref _disposed) != 0)
             {
                 return;
             }
@@ -102,7 +110,7 @@ namespace Logger.Core
                 return;
             }
 
-            EnqueueEntries(normalizedEntries);
+            AppendEntries(normalizedEntries, RequiresDurableSpool(normalizedEntries));
         }
 
         public void Dispose()
@@ -112,42 +120,52 @@ namespace Logger.Core
                 return;
             }
 
-            Interlocked.Exchange(ref _outputFaulted, 1);
-            ClearPendingEntries();
-            _pendingCapacitySignal.Dispose();
+            DrainPendingSpoolEntriesToWal();
+            _spoolSignal.Set();
+            _spoolCapacitySignal.Set();
+            _spoolSignal.Dispose();
+            _spoolCapacitySignal.Dispose();
+            _spool.Dispose();
         }
 
-        private void EnqueueEntries(IEnumerable<LogEntry> entries)
+        private void AppendEntries(IReadOnlyList<LogEntry> entries, bool requireDurableFlush)
         {
-            bool hasPendingEntries = false;
-            foreach (LogEntry entry in entries)
+            if (entries == null || entries.Count == 0 || Volatile.Read(ref _disposed) != 0)
             {
-                if (entry == null
-                    || Volatile.Read(ref _disposed) != 0)
-                {
-                    continue;
-                }
-
-                if (!WaitForPendingCapacity())
-                {
-                    return;
-                }
-
-                _pendingEntries.Enqueue(entry);
-                Interlocked.Increment(ref _pendingEntryCount);
-                hasPendingEntries = true;
+                return;
             }
 
-            if (hasPendingEntries)
+            WaitForSpoolCapacity(entries.Count);
+            if (Volatile.Read(ref _disposed) != 0)
             {
-                ScheduleFlush();
+                return;
             }
+
+            _pendingSpoolBatches.Enqueue(new PendingSpoolBatch(entries, requireDurableFlush));
+            Interlocked.Add(ref _pendingSpoolEntryCount, entries.Count);
+            ScheduleSpoolWrite();
+        }
+
+        private void ScheduleSpoolWrite()
+        {
+            if (Volatile.Read(ref _disposed) != 0)
+            {
+                return;
+            }
+
+            _spoolSignal.Set();
+
+            if (Interlocked.CompareExchange(ref _spoolWorkerRunning, 1, 0) != 0)
+            {
+                return;
+            }
+
+            ThreadPool.QueueUserWorkItem(_ => FlushPendingSpoolEntries());
         }
 
         private void ScheduleFlush()
         {
-            if (Volatile.Read(ref _disposed) != 0
-                || Volatile.Read(ref _outputFaulted) != 0)
+            if (Volatile.Read(ref _disposed) != 0)
             {
                 return;
             }
@@ -160,26 +178,73 @@ namespace Logger.Core
             ThreadPool.QueueUserWorkItem(_ => FlushPendingEntries());
         }
 
+        private void FlushPendingSpoolEntries()
+        {
+            try
+            {
+                while (Volatile.Read(ref _disposed) == 0)
+                {
+                    PendingSpoolWrite write = DequeuePendingSpoolEntries();
+                    if (write.Entries.Count == 0)
+                    {
+                        _spoolSignal.WaitOne(50);
+
+                        if (Volatile.Read(ref _pendingSpoolEntryCount) == 0)
+                        {
+                            return;
+                        }
+
+                        continue;
+                    }
+
+                    _spool.AppendEntries(write.Entries, write.RequireDurableFlush);
+                    ScheduleFlush();
+                }
+            }
+            finally
+            {
+                Interlocked.Exchange(ref _spoolWorkerRunning, 0);
+
+                if (Volatile.Read(ref _disposed) == 0
+                    && Volatile.Read(ref _pendingSpoolEntryCount) > 0)
+                {
+                    ScheduleSpoolWrite();
+                }
+            }
+        }
+
         private void FlushPendingEntries()
         {
             try
             {
-                while (Volatile.Read(ref _outputFaulted) == 0)
+                while (Volatile.Read(ref _disposed) == 0)
                 {
-                    List<LogEntry> entries = DequeuePendingEntries();
-                    if (entries.Count == 0)
+                    List<LogEntry> entries;
+                    long commitOffset;
+                    if (!_spool.TryReadNextBatch(_maxReplayBatchSize, out entries, out commitOffset))
                     {
                         return;
+                    }
+
+                    if (entries.Count == 0)
+                    {
+                        _spool.MarkCommitted(commitOffset);
+                        continue;
                     }
 
                     try
                     {
                         _storageBackend.WriteBatch(entries, _context);
+                        _spool.MarkCommitted(commitOffset);
                     }
                     catch
                     {
-                        Interlocked.Exchange(ref _outputFaulted, 1);
-                        return;
+                        if (Volatile.Read(ref _disposed) != 0)
+                        {
+                            return;
+                        }
+
+                        Thread.Sleep(500);
                     }
                 }
             }
@@ -187,72 +252,128 @@ namespace Logger.Core
             {
                 Interlocked.Exchange(ref _flushWorkerRunning, 0);
 
-                if (!_pendingEntries.IsEmpty && Volatile.Read(ref _outputFaulted) == 0)
+                if (Volatile.Read(ref _disposed) == 0 && _spool.HasPendingEntries)
                 {
                     ScheduleFlush();
                 }
             }
         }
 
-        private bool WaitForPendingCapacity()
+        private void WaitForSpoolCapacity(int incomingCount)
         {
-            while (Volatile.Read(ref _disposed) == 0
-                && Volatile.Read(ref _outputFaulted) == 0)
+            while (Volatile.Read(ref _disposed) == 0)
             {
-                ScheduleFlush();
-
-                try
+                int pendingCount = Volatile.Read(ref _pendingSpoolEntryCount);
+                if (pendingCount + incomingCount <= _maxPendingSpoolEntries)
                 {
-                    if (_pendingCapacitySignal.Wait(50))
+                    return;
+                }
+
+                ScheduleSpoolWrite();
+                _spoolCapacitySignal.WaitOne(CapacityWaitMilliseconds);
+            }
+        }
+
+        private PendingSpoolWrite DequeuePendingSpoolEntries()
+        {
+            List<LogEntry> entries = new List<LogEntry>();
+            bool requireDurableFlush = false;
+            PendingSpoolBatch batch;
+
+            while (_pendingSpoolBatches.TryDequeue(out batch))
+            {
+                int batchCount = batch != null && batch.Entries != null ? batch.Entries.Count : 0;
+                if (batchCount > 0)
+                {
+                    if (batch.RequireDurableFlush)
                     {
-                        return true;
+                        requireDurableFlush = true;
+                    }
+
+                    for (int index = 0; index < batchCount; index++)
+                    {
+                        LogEntry entry = batch.Entries[index];
+                        if (entry != null)
+                        {
+                            entries.Add(entry);
+                        }
                     }
                 }
-                catch (ObjectDisposedException)
+
+                Interlocked.Add(ref _pendingSpoolEntryCount, -batchCount);
+                _spoolCapacitySignal.Set();
+
+                if (entries.Count >= _maxSpoolWriteBatchEntries || requireDurableFlush)
                 {
-                    return false;
+                    break;
+                }
+            }
+
+            return new PendingSpoolWrite(entries, requireDurableFlush);
+        }
+
+        private void DrainPendingSpoolEntriesToWal()
+        {
+            while (Volatile.Read(ref _pendingSpoolEntryCount) > 0)
+            {
+                PendingSpoolWrite write = DequeuePendingSpoolEntries();
+                if (write.Entries.Count == 0)
+                {
+                    break;
+                }
+
+                _spool.AppendEntries(write.Entries, true);
+            }
+        }
+
+        private static bool RequiresDurableSpool(LogLevel level)
+        {
+            return level == LogLevel.Error || level == LogLevel.Fatal;
+        }
+
+        private static bool RequiresDurableSpool(IReadOnlyList<LogEntry> entries)
+        {
+            if (entries == null)
+            {
+                return false;
+            }
+
+            for (int index = 0; index < entries.Count; index++)
+            {
+                LogEntry entry = entries[index];
+                if (entry != null && RequiresDurableSpool(entry.Level))
+                {
+                    return true;
                 }
             }
 
             return false;
         }
 
-        private List<LogEntry> DequeuePendingEntries()
+        private sealed class PendingSpoolBatch
         {
-            List<LogEntry> entries = new List<LogEntry>();
-            LogEntry entry;
-            while (_pendingEntries.TryDequeue(out entry))
+            public PendingSpoolBatch(IReadOnlyList<LogEntry> entries, bool requireDurableFlush)
             {
-                entries.Add(entry);
-                Interlocked.Decrement(ref _pendingEntryCount);
-                ReleasePendingCapacity();
+                Entries = entries;
+                RequireDurableFlush = requireDurableFlush;
             }
 
-            return entries;
+            public IReadOnlyList<LogEntry> Entries { get; }
+
+            public bool RequireDurableFlush { get; }
         }
 
-        private void ClearPendingEntries()
+        private sealed class PendingSpoolWrite
         {
-            LogEntry entry;
-            while (_pendingEntries.TryDequeue(out entry))
+            public PendingSpoolWrite(List<LogEntry> entries, bool requireDurableFlush)
             {
-                Interlocked.Decrement(ref _pendingEntryCount);
-                ReleasePendingCapacity();
+                Entries = entries ?? new List<LogEntry>();
+                RequireDurableFlush = requireDurableFlush;
             }
-        }
 
-        private void ReleasePendingCapacity()
-        {
-            try
-            {
-                _pendingCapacitySignal.Release();
-            }
-            catch (ObjectDisposedException)
-            {
-            }
-            catch (SemaphoreFullException)
-            {
-            }
+            public List<LogEntry> Entries { get; }
+
+            public bool RequireDurableFlush { get; }
         }
     }
 }

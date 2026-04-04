@@ -13,7 +13,7 @@ namespace Logger.WinForms.Demo
     public sealed class MemoryMetricsDemoForm : Form
     {
         private const int SessionBufferLimit = 200;
-        private const int PendingQueueLimit = 120;
+        private const int ReplayBatchLimit = 120;
         private const int BackendDelayMilliseconds = 300;
 
         private readonly ILoggerOutput _logger;
@@ -41,7 +41,8 @@ namespace Logger.WinForms.Demo
                 new SlowTextFileLogStorageBackendFactory(logRoot, BackendDelayMilliseconds),
                 LogLevel.Trace,
                 SessionBufferLimit,
-                PendingQueueLimit);
+                ReplayBatchLimit,
+                Path.Combine(AppContext.BaseDirectory, "MemoryMetricsDemo", "Spool"));
 
             _logger = factory.CreateLogger("Logger.WinForms.Demo.MemoryMetrics");
             _sessionSource = _logger as ILogSessionSource;
@@ -133,9 +134,9 @@ namespace Logger.WinForms.Demo
                 ForeColor = Color.FromArgb(31, 41, 55),
                 Margin = new Padding(0, 0, 0, 6),
                 Text = string.Format(
-                    "Session buffer limit = {0}, pending storage queue limit = {1}, backend delay = {2} ms",
+                    "Session buffer limit = {0}, WAL replay batch size = {1}, backend delay = {2} ms",
                     SessionBufferLimit,
-                    PendingQueueLimit,
+                    ReplayBatchLimit,
                     BackendDelayMilliseconds)
             };
 
@@ -173,7 +174,7 @@ namespace Logger.WinForms.Demo
                 AutoSize = true,
                 Margin = new Padding(0, 0, 0, 10),
                 ForeColor = Color.FromArgb(75, 85, 99),
-                Text = "This demo keeps UI binding unchanged and shows bounded session buffering plus non-dropping storage backpressure."
+                Text = "This demo keeps UI binding unchanged and shows bounded session buffering plus durable local WAL/spool replay to a slow storage backend."
             };
 
             TableLayoutPanel contentLayout = new TableLayoutPanel
@@ -207,7 +208,8 @@ ILoggerFactory factory = new LogStoreLoggerFactory(
     new SlowTextFileLogStorageBackendFactory(@""D:\Logs"", 300),
     minimumLevel: LogLevel.Trace,
     maxBufferedSessionEntries: 200,
-    maxPendingStorageEntries: 120);
+    maxPendingStorageEntries: 120,
+    spoolRootDirectoryPath: @""D:\LogSpool"");
 
 ILoggerOutput logger = factory.CreateLogger(""MyApp.Memory"");
 ILogRuntimeMetricsSource metrics = logger as ILogRuntimeMetricsSource;
@@ -254,7 +256,7 @@ int total = session != null ? session.SessionEntryCount : 0;"
         private void MemoryMetricsDemoForm_Shown(object sender, EventArgs e)
         {
             _logger.AddInfo("Memory metrics demo started.");
-            _logger.AddInfo("Write sample, burst, or extreme traffic to inspect buffered session entries and verify storage backpressure does not drop logs.");
+            _logger.AddInfo("Write sample, burst, or extreme traffic to inspect buffered session entries and verify logs are first persisted to local WAL/spool before slow backend replay.");
             RefreshRuntimeState();
             _refreshTimer.Start();
         }
@@ -324,7 +326,7 @@ int total = session != null ? session.SessionEntryCount : 0;"
                     DateTime.Now,
                     level,
                     string.Format(
-                        "[{0:N0}/{1:N0}] {2} backpressure test message",
+                        "[{0:N0}/{1:N0}] {2} WAL replay stress message",
                         index,
                         total,
                         level.ToString().ToUpperInvariant())));

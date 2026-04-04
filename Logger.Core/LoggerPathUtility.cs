@@ -19,6 +19,34 @@ namespace Logger.Core
                 : logRootDirectoryPath.Trim();
         }
 
+        public static string ResolveSpoolRootDirectory(string spoolRootDirectoryPath)
+        {
+            return string.IsNullOrWhiteSpace(spoolRootDirectoryPath)
+                ? Path.Combine(AppContext.BaseDirectory, "LogSpool")
+                : spoolRootDirectoryPath.Trim();
+        }
+
+        public static string BuildSpoolDirectoryPath(string loggerName, string spoolRootDirectoryPath)
+        {
+            return Path.Combine(
+                ResolveSpoolRootDirectory(spoolRootDirectoryPath),
+                SanitizePathSegment(loggerName));
+        }
+
+        public static string BuildSpoolFilePath(string loggerName, string spoolRootDirectoryPath)
+        {
+            return Path.Combine(
+                BuildSpoolDirectoryPath(loggerName, spoolRootDirectoryPath),
+                "current.wal");
+        }
+
+        public static string BuildSpoolCheckpointPath(string loggerName, string spoolRootDirectoryPath)
+        {
+            return Path.Combine(
+                BuildSpoolDirectoryPath(loggerName, spoolRootDirectoryPath),
+                "current.chk");
+        }
+
         public static string BuildLogFilePath(
             string loggerName,
             string logRootDirectoryPath,

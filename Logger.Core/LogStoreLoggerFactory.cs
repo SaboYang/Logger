@@ -9,18 +9,24 @@ namespace Logger.Core
         private readonly LogLevel _minimumLevel;
         private readonly int _maxBufferedSessionEntries;
         private readonly int _maxPendingStorageEntries;
+        private readonly string _spoolRootDirectoryPath;
+        private readonly LogSpoolFlushMode _spoolFlushMode;
 
         public LogStoreLoggerFactory(
             string logRootDirectoryPath = null,
             LogLevel minimumLevel = LogLevel.Trace,
             LogFileRollingMode rollingMode = LogFileRollingMode.Day,
             int maxBufferedSessionEntries = 5000,
-            int maxPendingStorageEntries = 5000)
+            int maxPendingStorageEntries = 5000,
+            string spoolRootDirectoryPath = null,
+            LogSpoolFlushMode spoolFlushMode = LogSpoolFlushMode.Buffered)
             : this(
                   new TextFileLogStorageBackendFactory(logRootDirectoryPath, rollingMode),
                   minimumLevel,
                   maxBufferedSessionEntries,
-                  maxPendingStorageEntries)
+                  maxPendingStorageEntries,
+                  spoolRootDirectoryPath,
+                  spoolFlushMode)
         {
         }
 
@@ -28,12 +34,16 @@ namespace Logger.Core
             ILogStorageBackendFactory storageBackendFactory,
             LogLevel minimumLevel = LogLevel.Trace,
             int maxBufferedSessionEntries = 5000,
-            int maxPendingStorageEntries = 5000)
+            int maxPendingStorageEntries = 5000,
+            string spoolRootDirectoryPath = null,
+            LogSpoolFlushMode spoolFlushMode = LogSpoolFlushMode.Buffered)
         {
             _storageBackendFactory = storageBackendFactory;
             _minimumLevel = minimumLevel;
             _maxBufferedSessionEntries = Math.Max(1, maxBufferedSessionEntries);
             _maxPendingStorageEntries = Math.Max(1, maxPendingStorageEntries);
+            _spoolRootDirectoryPath = LoggerPathUtility.ResolveSpoolRootDirectory(spoolRootDirectoryPath);
+            _spoolFlushMode = spoolFlushMode;
         }
 
         public ILoggerOutput CreateLogger(string name)
@@ -45,7 +55,9 @@ namespace Logger.Core
                 DateTime.Now,
                 _minimumLevel,
                 _maxBufferedSessionEntries,
-                _maxPendingStorageEntries);
+                _maxPendingStorageEntries,
+                _spoolRootDirectoryPath,
+                _spoolFlushMode);
             LogStore logStore = new LogStore();
             LogSessionBuffer sessionBuffer = new LogSessionBuffer(storageContext);
             ILogStorageBackend storageBackend = _storageBackendFactory != null

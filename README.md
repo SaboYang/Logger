@@ -15,6 +15,8 @@
 - 默认最低等级是 `Trace`
 - 等级过滤发生在 logger 写入入口，不在存储层重复过滤
 - 支持 WPF / WinForms 绑定
+- 内置本地 `spool/WAL`，先顺序落本地，再由后台慢慢转存到文件、CSV 或自定义后端
+- 默认 `spool/WAL` 刷新模式是 `Buffered`，优先保证日志吞吐；需要更强本地持久化时可切到 `Durable`
 - 支持文本文件、CSV、自定义存储后端
 - 文件存储支持 `单文件 / 年 / 月 / 周 / 日` 五种滚动方式，默认按日
 - UI 自带搜索、等级过滤、清空视图
@@ -218,7 +220,9 @@ var factory = new LogStoreLoggerFactory(
     new DbLogStorageBackendFactory(),
     minimumLevel: LogLevel.Trace,
     maxBufferedSessionEntries: 5000,
-    maxPendingStorageEntries: 5000);
+    maxPendingStorageEntries: 5000,
+    spoolRootDirectoryPath: @"D:\LogSpool",
+    spoolFlushMode: LogSpoolFlushMode.Buffered);
 
 LogManager.Configure(new LoggerService(factory));
 
@@ -232,7 +236,10 @@ logger.AddInfo("订单服务启动");
 - 存储后端收到的是已经通过 logger 入口过滤的日志
 - `LogStorageContext.MinimumLevel` 只用于让后端知道当前 logger 的配置，不建议后端再次做等级过滤
 - `maxBufferedSessionEntries` 用来限制本场会话快照在内存中的保留条数
-- `maxPendingStorageEntries` 用来限制后台待写队列的内存占用，队列满时会对写入端施加背压，不默认丢日志
+- `maxPendingStorageEntries` 用来限制后台每次从本地 WAL 读取并转存的批量大小，不影响日志是否先落本地
+- `spoolRootDirectoryPath` 用来指定本地 `spool/WAL` 目录；不传时默认是 `AppContext.BaseDirectory\\LogSpool`
+- `spoolFlushMode` 默认是 `Buffered`，写入后只刷到 OS 文件缓存，吞吐更高；如果你要更强的本地落盘保证，可以改成 `LogSpoolFlushMode.Durable`
+- 当前持久化语义是 `at-least-once`：如果进程在“后端写成功”和“WAL checkpoint 更新”之间崩溃，恢复后可能出现极小窗口的重复重放
 
 ## 文件存储滚动方式
 
@@ -263,7 +270,9 @@ var factory = new LogStoreLoggerFactory(
     minimumLevel: LogLevel.Trace,
     rollingMode: LogFileRollingMode.Month,
     maxBufferedSessionEntries: 5000,
-    maxPendingStorageEntries: 5000);
+    maxPendingStorageEntries: 5000,
+    spoolRootDirectoryPath: @"D:\LogSpool",
+    spoolFlushMode: LogSpoolFlushMode.Buffered);
 
 LogManager.Configure(new LoggerService(factory));
 
@@ -283,7 +292,9 @@ var factory = new LogStoreLoggerFactory(
         LogFileRollingMode.Week),
     minimumLevel: LogLevel.Trace,
     maxBufferedSessionEntries: 5000,
-    maxPendingStorageEntries: 5000);
+    maxPendingStorageEntries: 5000,
+    spoolRootDirectoryPath: @"D:\LogSpool",
+    spoolFlushMode: LogSpoolFlushMode.Buffered);
 
 LogManager.Configure(new LoggerService(factory));
 ```

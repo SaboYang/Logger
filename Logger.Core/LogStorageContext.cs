@@ -11,7 +11,9 @@ namespace Logger.Core
             DateTime sessionStartedAt,
             LogLevel minimumLevel = LogLevel.Trace,
             int maxBufferedSessionEntries = 5000,
-            int maxPendingStorageEntries = 5000)
+            int maxPendingStorageEntries = 5000,
+            string spoolRootDirectoryPath = null,
+            LogSpoolFlushMode spoolFlushMode = LogSpoolFlushMode.Buffered)
         {
             LoggerName = LoggerPathUtility.NormalizeLoggerName(loggerName);
             SessionId = sessionId == Guid.Empty ? Guid.NewGuid() : sessionId;
@@ -19,6 +21,8 @@ namespace Logger.Core
             MinimumLevel = minimumLevel;
             MaxBufferedSessionEntries = Math.Max(1, maxBufferedSessionEntries);
             MaxPendingStorageEntries = Math.Max(1, maxPendingStorageEntries);
+            SpoolRootDirectoryPath = LoggerPathUtility.ResolveSpoolRootDirectory(spoolRootDirectoryPath);
+            SpoolFlushMode = spoolFlushMode;
         }
 
         public string LoggerName { get; }
@@ -32,5 +36,9 @@ namespace Logger.Core
         public int MaxBufferedSessionEntries { get; }
 
         public int MaxPendingStorageEntries { get; }
+
+        public string SpoolRootDirectoryPath { get; }
+
+        public LogSpoolFlushMode SpoolFlushMode { get; }
     }
 }
