@@ -6,10 +6,14 @@ namespace Logger.Core
     public sealed class TextFileLogStorageBackendFactory : ILogStorageBackendFactory
     {
         private readonly string _logRootDirectoryPath;
+        private readonly LogFileRollingMode _rollingMode;
 
-        public TextFileLogStorageBackendFactory(string logRootDirectoryPath = null)
+        public TextFileLogStorageBackendFactory(
+            string logRootDirectoryPath = null,
+            LogFileRollingMode rollingMode = LogFileRollingMode.Day)
         {
             _logRootDirectoryPath = LoggerPathUtility.ResolveLogRootDirectory(logRootDirectoryPath);
+            _rollingMode = rollingMode;
         }
 
         public ILogStorageBackend CreateBackend(LogStorageContext context)
@@ -19,17 +23,13 @@ namespace Logger.Core
                 throw new ArgumentNullException(nameof(context));
             }
 
-            return new TextFileLogStorageBackend(BuildLogFilePath(context, "log"));
-        }
-
-        private string BuildLogFilePath(LogStorageContext context, string extension)
-        {
-            return LoggerPathUtility.BuildLogFilePath(
+            FileLogPathProvider pathProvider = new FileLogPathProvider(
                 context.LoggerName,
                 _logRootDirectoryPath,
-                context.SessionStartedAt,
-                context.SessionId,
-                extension);
+                "log",
+                _rollingMode);
+
+            return new TextFileLogStorageBackend(pathProvider);
         }
     }
 }

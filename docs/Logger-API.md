@@ -483,6 +483,16 @@ logger.AddInfo("订单服务启动");
 
 - `TextFileLogStorageBackendFactory`
 - `CsvFileLogStorageBackendFactory`
+- `LogFileRollingMode.SingleFile / Year / Month / Week / Day`
+
+默认文件滚动方式是 `LogFileRollingMode.Day`。
+
+滚动分文件是按日志时间戳执行的：
+
+- `AddLog(...)`：使用当前写入时间决定目标文件
+- `AddLogs(...)`：使用每条 `LogEntry.Timestamp` 决定目标文件
+- 如果一批日志跨越多个时间周期，后端会自动生成并写入多个文件
+- 例如按日滚动时，一批同时包含 `2026-04-04` 和 `2026-04-05` 的日志，会分别进入 `20260404.xxx` 和 `20260405.xxx`
 
 CSV 示例：
 
@@ -491,13 +501,32 @@ using Logger.Core;
 using Logger.Core.Models;
 
 var factory = new LogStoreLoggerFactory(
-    new CsvFileLogStorageBackendFactory(@"D:\Logs"),
+    new CsvFileLogStorageBackendFactory(
+        @"D:\Logs",
+        LogFileRollingMode.Week),
     minimumLevel: LogLevel.Trace);
 
 LogManager.Configure(new LoggerService(factory));
 
 ILoggerOutput logger = LogManager.GetLogger("CsvDemo");
 logger.AddInfo("当前日志会写入 CSV");
+```
+
+文本文件按月滚动示例：
+
+```csharp
+using Logger.Core;
+using Logger.Core.Models;
+
+var factory = new LogStoreLoggerFactory(
+    logRootDirectoryPath: @"D:\Logs",
+    minimumLevel: LogLevel.Trace,
+    rollingMode: LogFileRollingMode.Month);
+
+LogManager.Configure(new LoggerService(factory));
+
+ILoggerOutput logger = LogManager.GetLogger("TextDemo");
+logger.AddInfo("当前日志会按月写入文本文件");
 ```
 
 ### 10.4 存储后端的职责边界

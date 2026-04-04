@@ -8,8 +8,11 @@ namespace Logger.Core
         private readonly ILogStorageBackendFactory _storageBackendFactory;
         private readonly LogLevel _minimumLevel;
 
-        public LogStoreLoggerFactory(string logRootDirectoryPath = null, LogLevel minimumLevel = LogLevel.Trace)
-            : this(new TextFileLogStorageBackendFactory(logRootDirectoryPath), minimumLevel)
+        public LogStoreLoggerFactory(
+            string logRootDirectoryPath = null,
+            LogLevel minimumLevel = LogLevel.Trace,
+            LogFileRollingMode rollingMode = LogFileRollingMode.Day)
+            : this(new TextFileLogStorageBackendFactory(logRootDirectoryPath, rollingMode), minimumLevel)
         {
         }
 

@@ -16,6 +16,7 @@
 - 等级过滤发生在 logger 写入入口，不在存储层重复过滤
 - 支持 WPF / WinForms 绑定
 - 支持文本文件、CSV、自定义存储后端
+- 文件存储支持 `单文件 / 年 / 月 / 周 / 日` 五种滚动方式，默认按日
 - UI 自带搜索、等级过滤、清空视图
 
 ## 1 分钟上手
@@ -205,6 +206,56 @@ logger.AddInfo("订单服务启动");
 - `minimumLevel` 配置的是 factory 创建出来的 logger 入口等级
 - 存储后端收到的是已经通过 logger 入口过滤的日志
 - `LogStorageContext.MinimumLevel` 只用于让后端知道当前 logger 的配置，不建议后端再次做等级过滤
+
+## 文件存储滚动方式
+
+文本文件和 CSV 文件后端都支持以下滚动方式：
+
+- `LogFileRollingMode.SingleFile`
+- `LogFileRollingMode.Year`
+- `LogFileRollingMode.Month`
+- `LogFileRollingMode.Week`
+- `LogFileRollingMode.Day`
+
+默认值是 `LogFileRollingMode.Day`。
+
+滚动判断基于每条日志自己的时间戳：
+
+- `AddLog(...)` 写入时，按当前时间自动落到对应文件
+- `AddLogs(...)` 批量写入时，如果日志时间跨天、跨周、跨月、跨年，会自动拆分并生成对应文件
+- 同一批日志里混合多个时间段时，会一次性写入多个目标文件
+
+示例：
+
+```csharp
+using Logger.Core;
+using Logger.Core.Models;
+
+var factory = new LogStoreLoggerFactory(
+    logRootDirectoryPath: @"D:\Logs",
+    minimumLevel: LogLevel.Trace,
+    rollingMode: LogFileRollingMode.Month);
+
+LogManager.Configure(new LoggerService(factory));
+
+ILoggerOutput logger = LogManager.GetLogger("OrderService");
+logger.AddInfo("当前日志会按月写入文件");
+```
+
+CSV 示例：
+
+```csharp
+using Logger.Core;
+using Logger.Core.Models;
+
+var factory = new LogStoreLoggerFactory(
+    new CsvFileLogStorageBackendFactory(
+        @"D:\Logs\Csv",
+        LogFileRollingMode.Week),
+    minimumLevel: LogLevel.Trace);
+
+LogManager.Configure(new LoggerService(factory));
+```
 
 ## 推荐用法
 

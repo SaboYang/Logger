@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Text;
 
@@ -21,20 +22,19 @@ namespace Logger.Core
         public static string BuildLogFilePath(
             string loggerName,
             string logRootDirectoryPath,
-            DateTime sessionStartedAt,
-            Guid sessionId,
-            string extension)
+            DateTime timestamp,
+            string extension,
+            LogFileRollingMode rollingMode)
         {
             string rootDirectoryPath = ResolveLogRootDirectory(logRootDirectoryPath);
             string loggerDirectoryName = SanitizePathSegment(loggerName);
-            string dateDirectoryName = sessionStartedAt.ToString("yyyyMMdd");
-            string fileName = string.Format(
-                "{0}_{1}.{2}",
-                sessionStartedAt.ToString("HHmmss_fff"),
-                sessionId.ToString("N").Substring(0, 8),
-                extension);
+            string normalizedExtension = string.IsNullOrWhiteSpace(extension)
+                ? "log"
+                : extension.Trim().TrimStart('.');
+            DateTime normalizedTimestamp = timestamp == DateTime.MinValue ? DateTime.Now : timestamp;
+            string fileName = BuildRollingFileName(normalizedTimestamp, normalizedExtension, rollingMode);
 
-            return Path.Combine(rootDirectoryPath, loggerDirectoryName, dateDirectoryName, fileName);
+            return Path.Combine(rootDirectoryPath, loggerDirectoryName, fileName);
         }
 
         public static string SanitizePathSegment(string value)
@@ -50,6 +50,44 @@ namespace Logger.Core
 
             string sanitizedValue = builder.ToString().Trim();
             return string.IsNullOrWhiteSpace(sanitizedValue) ? "Default" : sanitizedValue;
+        }
+
+        private static string BuildRollingFileName(DateTime timestamp, string extension, LogFileRollingMode rollingMode)
+        {
+            switch (rollingMode)
+            {
+                case LogFileRollingMode.SingleFile:
+                    return "current." + extension;
+                case LogFileRollingMode.Year:
+                    return timestamp.ToString("yyyy") + "." + extension;
+                case LogFileRollingMode.Month:
+                    return timestamp.ToString("yyyyMM") + "." + extension;
+                case LogFileRollingMode.Week:
+                    int weekYear;
+                    int weekNumber;
+                    GetIsoWeek(timestamp, out weekYear, out weekNumber);
+                    return string.Format("{0}-W{1:00}.{2}", weekYear, weekNumber, extension);
+                case LogFileRollingMode.Day:
+                default:
+                    return timestamp.ToString("yyyyMMdd") + "." + extension;
+            }
+        }
+
+        private static void GetIsoWeek(DateTime timestamp, out int weekYear, out int weekNumber)
+        {
+            DateTime date = timestamp.Date;
+            DayOfWeek day = CultureInfo.InvariantCulture.Calendar.GetDayOfWeek(date);
+
+            if (day >= DayOfWeek.Monday && day <= DayOfWeek.Wednesday)
+            {
+                date = date.AddDays(3);
+            }
+
+            weekYear = date.Year;
+            weekNumber = CultureInfo.InvariantCulture.Calendar.GetWeekOfYear(
+                date,
+                CalendarWeekRule.FirstFourDayWeek,
+                DayOfWeek.Monday);
         }
     }
 }
