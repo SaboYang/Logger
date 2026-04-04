@@ -10,7 +10,7 @@ namespace Logger.Core
         private readonly BulkObservableCollection<LogEntry> _entries = new BulkObservableCollection<LogEntry>();
         private readonly object _syncRoot = new object();
         private int _maxEntries = 500;
-        private LogLevel _minimumLevel = LogLevel.Info;
+        private LogLevel _minimumLevel = LogLevel.Trace;
 
         public object SyncRoot
         {
@@ -51,6 +51,11 @@ namespace Logger.Core
                     _minimumLevel = value;
                 }
             }
+        }
+
+        public void SetMinimumLevel(LogLevel minimumLevel)
+        {
+            MinimumLevel = minimumLevel;
         }
 
         public void AddTrace(string message)

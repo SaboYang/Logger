@@ -5,7 +5,7 @@ namespace Logger.Core
 {
     public sealed class LogStorageContext
     {
-        public LogStorageContext(string loggerName, Guid sessionId, DateTime sessionStartedAt, LogLevel minimumLevel = LogLevel.Info)
+        public LogStorageContext(string loggerName, Guid sessionId, DateTime sessionStartedAt, LogLevel minimumLevel = LogLevel.Trace)
         {
             LoggerName = LoggerPathUtility.NormalizeLoggerName(loggerName);
             SessionId = sessionId == Guid.Empty ? Guid.NewGuid() : sessionId;

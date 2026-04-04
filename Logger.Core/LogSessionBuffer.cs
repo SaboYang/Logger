@@ -4,17 +4,15 @@ using Logger.Core.Models;
 
 namespace Logger.Core
 {
-    internal sealed class LogSessionBuffer : ILoggerOutput, ILogSessionSource, ILogLevelThreshold
+    internal sealed class LogSessionBuffer : ILoggerOutput, ILogSessionSource
     {
         private readonly object _syncRoot = new object();
         private readonly List<LogEntry> _entries = new List<LogEntry>();
         private readonly LogStorageContext _sessionInfo;
-        private LogLevel _minimumLevel;
 
         public LogSessionBuffer(LogStorageContext sessionInfo)
         {
             _sessionInfo = sessionInfo ?? throw new ArgumentNullException(nameof(sessionInfo));
-            _minimumLevel = sessionInfo.MinimumLevel;
         }
 
         public Guid SessionId
@@ -38,22 +36,8 @@ namespace Logger.Core
             }
         }
 
-        public LogLevel MinimumLevel
+        public void SetMinimumLevel(LogLevel minimumLevel)
         {
-            get
-            {
-                lock (_syncRoot)
-                {
-                    return _minimumLevel;
-                }
-            }
-            set
-            {
-                lock (_syncRoot)
-                {
-                    _minimumLevel = value;
-                }
-            }
         }
 
         public void AddTrace(string message)
@@ -101,11 +85,6 @@ namespace Logger.Core
 
             lock (_syncRoot)
             {
-                if (!LogEntryFilter.MeetsMinimumLevel(level, _minimumLevel))
-                {
-                    return;
-                }
-
                 _entries.Add(new LogEntry(DateTime.Now, level, normalizedMessage));
             }
         }
@@ -120,7 +99,7 @@ namespace Logger.Core
 
             lock (_syncRoot)
             {
-                _entries.AddRange(LogEntryFilter.FilterEntries(normalizedEntries, _minimumLevel));
+                _entries.AddRange(normalizedEntries);
             }
         }
 

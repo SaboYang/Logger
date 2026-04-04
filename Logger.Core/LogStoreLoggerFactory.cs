@@ -8,12 +8,12 @@ namespace Logger.Core
         private readonly ILogStorageBackendFactory _storageBackendFactory;
         private readonly LogLevel _minimumLevel;
 
-        public LogStoreLoggerFactory(string logRootDirectoryPath = null, LogLevel minimumLevel = LogLevel.Info)
+        public LogStoreLoggerFactory(string logRootDirectoryPath = null, LogLevel minimumLevel = LogLevel.Trace)
             : this(new TextFileLogStorageBackendFactory(logRootDirectoryPath), minimumLevel)
         {
         }
 
-        public LogStoreLoggerFactory(ILogStorageBackendFactory storageBackendFactory, LogLevel minimumLevel = LogLevel.Info)
+        public LogStoreLoggerFactory(ILogStorageBackendFactory storageBackendFactory, LogLevel minimumLevel = LogLevel.Trace)
         {
             _storageBackendFactory = storageBackendFactory;
             _minimumLevel = minimumLevel;

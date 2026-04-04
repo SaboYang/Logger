@@ -374,11 +374,12 @@ namespace Logger.WinForms.Demo
                     _tableBackend = null;
                     return new LogStoreLoggerFactory(
                         new CsvFileLogStorageBackendFactory(
-                            Path.Combine(rootDirectory, "Csv"))).CreateLogger(loggerName);
+                            Path.Combine(rootDirectory, "Csv")),
+                        LogLevel.Trace).CreateLogger(loggerName);
 
                 case StorageBackendKind.SimulatedDatabase:
                     DemoTableLogStorageBackendFactory tableFactory = new DemoTableLogStorageBackendFactory();
-                    ILoggerOutput dbLogger = new LogStoreLoggerFactory(tableFactory).CreateLogger(loggerName);
+                    ILoggerOutput dbLogger = new LogStoreLoggerFactory(tableFactory, LogLevel.Trace).CreateLogger(loggerName);
                     _tableBackend = tableFactory.CurrentBackend;
                     return dbLogger;
 
@@ -386,7 +387,8 @@ namespace Logger.WinForms.Demo
                     _tableBackend = null;
                     return new LogStoreLoggerFactory(
                         new TextFileLogStorageBackendFactory(
-                            Path.Combine(rootDirectory, "Text"))).CreateLogger(loggerName);
+                            Path.Combine(rootDirectory, "Text")),
+                        LogLevel.Trace).CreateLogger(loggerName);
             }
         }
 
@@ -637,7 +639,8 @@ namespace Logger.WinForms.Demo
 LogManager.Configure(
     new LoggerService(
         new LogStoreLoggerFactory(
-            new CsvFileLogStorageBackendFactory(@""D:\Logs\Csv""))));
+            new CsvFileLogStorageBackendFactory(@""D:\Logs\Csv""),
+            minimumLevel: LogLevel.Trace)));
 
 ILoggerOutput logger = LogManager.GetLogger(""OrderService"");
 logPanel.Logger = logger;
@@ -653,7 +656,7 @@ ILogStorageBackendFactory storageFactory =
     new YourDbLogStorageBackendFactory(""Server=.;Database=Logger;..."");
 
 ILoggerFactory loggerFactory =
-    new LogStoreLoggerFactory(storageFactory);
+    new LogStoreLoggerFactory(storageFactory, minimumLevel: LogLevel.Trace);
 
 ILoggerOutput logger = loggerFactory.CreateLogger(""OrderService"");
 logPanel.Logger = logger;
@@ -671,7 +674,8 @@ logger.AddError(""line1\r\nline2"");
 LogManager.Configure(
     new LoggerService(
         new LogStoreLoggerFactory(
-            new TextFileLogStorageBackendFactory(@""D:\Logs\Text""))));
+            new TextFileLogStorageBackendFactory(@""D:\Logs\Text""),
+            minimumLevel: LogLevel.Trace)));
 
 ILoggerOutput logger = LogManager.GetLogger(""OrderService"");
 logPanel.Logger = logger;

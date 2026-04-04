@@ -5,6 +5,8 @@ namespace Logger.Core
 {
     public interface ILoggerOutput
     {
+        void SetMinimumLevel(LogLevel minimumLevel);
+
         void AddTrace(string message);
 
         void AddDebug(string message);

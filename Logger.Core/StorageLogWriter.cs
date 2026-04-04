@@ -6,26 +6,22 @@ using Logger.Core.Models;
 
 namespace Logger.Core
 {
-    internal sealed class StorageLogWriter : ILoggerOutput, ILogLevelThreshold
+    internal sealed class StorageLogWriter : ILoggerOutput
     {
         private readonly ConcurrentQueue<LogEntry> _pendingEntries = new ConcurrentQueue<LogEntry>();
         private readonly LogStorageContext _context;
         private readonly ILogStorageBackend _storageBackend;
         private int _flushWorkerRunning;
         private int _outputFaulted;
-        private int _minimumLevel;
 
         public StorageLogWriter(LogStorageContext context, ILogStorageBackend storageBackend)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
             _storageBackend = storageBackend ?? throw new ArgumentNullException(nameof(storageBackend));
-            _minimumLevel = (int)context.MinimumLevel;
         }
 
-        public LogLevel MinimumLevel
+        public void SetMinimumLevel(LogLevel minimumLevel)
         {
-            get { return (LogLevel)Volatile.Read(ref _minimumLevel); }
-            set { Interlocked.Exchange(ref _minimumLevel, (int)value); }
         }
 
         public void AddTrace(string message)
@@ -67,8 +63,7 @@ namespace Logger.Core
         {
             string normalizedMessage = LogEntrySanitizer.NormalizeMessage(message);
             if (normalizedMessage == null
-                || Volatile.Read(ref _outputFaulted) != 0
-                || !LogEntryFilter.MeetsMinimumLevel(level, MinimumLevel))
+                || Volatile.Read(ref _outputFaulted) != 0)
             {
                 return;
             }
@@ -89,13 +84,7 @@ namespace Logger.Core
                 return;
             }
 
-            List<LogEntry> filteredEntries = LogEntryFilter.FilterEntries(normalizedEntries, MinimumLevel);
-            if (filteredEntries.Count == 0)
-            {
-                return;
-            }
-
-            EnqueueEntries(filteredEntries);
+            EnqueueEntries(normalizedEntries);
         }
 
         private void EnqueueEntries(IEnumerable<LogEntry> entries)

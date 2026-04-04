@@ -12,7 +12,7 @@ namespace Logger.Core
         private readonly ILogViewSource _viewSource;
         private readonly ILogSessionSource _sessionSource;
         private readonly ILogFileSource _fileSource;
-        private int _minimumLevel = (int)LogLevel.Info;
+        private int _minimumLevel = (int)LogLevel.Trace;
 
         public CompositeLogger(
             ILogViewSource viewSource,
@@ -73,8 +73,12 @@ namespace Logger.Core
             set
             {
                 Interlocked.Exchange(ref _minimumLevel, (int)value);
-                PropagateMinimumLevel(value);
             }
+        }
+
+        public void SetMinimumLevel(LogLevel minimumLevel)
+        {
+            MinimumLevel = minimumLevel;
         }
 
         public void AddTrace(string message)
@@ -170,25 +174,5 @@ namespace Logger.Core
 
             return snapshot;
         }
-
-        private void PropagateMinimumLevel(LogLevel minimumLevel)
-        {
-            SetMinimumLevel(_viewSource as ILogLevelThreshold, minimumLevel);
-            SetMinimumLevel(_sessionSource as ILogLevelThreshold, minimumLevel);
-
-            foreach (ILoggerOutput output in _outputs)
-            {
-                SetMinimumLevel(output as ILogLevelThreshold, minimumLevel);
-            }
-        }
-
-        private static void SetMinimumLevel(ILogLevelThreshold threshold, LogLevel minimumLevel)
-        {
-            if (threshold != null)
-            {
-                threshold.MinimumLevel = minimumLevel;
-            }
-        }
-
     }
 }
