@@ -5,11 +5,12 @@ using Logger.Core.Models;
 
 namespace Logger.Core
 {
-    public class LogStore : ILoggerOutput, ILogViewSource
+    public class LogStore : ILoggerOutput, ILogViewSource, ILogLevelThreshold
     {
         private readonly BulkObservableCollection<LogEntry> _entries = new BulkObservableCollection<LogEntry>();
         private readonly object _syncRoot = new object();
         private int _maxEntries = 500;
+        private LogLevel _minimumLevel = LogLevel.Info;
 
         public object SyncRoot
         {
@@ -30,6 +31,24 @@ namespace Logger.Core
                 {
                     _maxEntries = Math.Max(1, value);
                     TrimEntries();
+                }
+            }
+        }
+
+        public LogLevel MinimumLevel
+        {
+            get
+            {
+                lock (_syncRoot)
+                {
+                    return _minimumLevel;
+                }
+            }
+            set
+            {
+                lock (_syncRoot)
+                {
+                    _minimumLevel = value;
                 }
             }
         }
@@ -79,6 +98,11 @@ namespace Logger.Core
 
             lock (_syncRoot)
             {
+                if (level < _minimumLevel)
+                {
+                    return;
+                }
+
                 _entries.Add(new LogEntry(DateTime.Now, level, normalizedMessage));
                 TrimEntries();
             }
@@ -94,9 +118,30 @@ namespace Logger.Core
 
             lock (_syncRoot)
             {
-                _entries.AddRange(normalizedEntries);
+                List<LogEntry> filteredEntries = FilterEntries(normalizedEntries, _minimumLevel);
+                if (filteredEntries.Count == 0)
+                {
+                    return;
+                }
+
+                _entries.AddRange(filteredEntries);
                 TrimEntries();
             }
+        }
+
+        private static List<LogEntry> FilterEntries(List<LogEntry> entries, LogLevel minimumLevel)
+        {
+            List<LogEntry> filteredEntries = new List<LogEntry>(entries.Count);
+
+            foreach (LogEntry entry in entries)
+            {
+                if (entry != null && entry.Level >= minimumLevel)
+                {
+                    filteredEntries.Add(entry);
+                }
+            }
+
+            return filteredEntries;
         }
 
         private void TrimEntries()

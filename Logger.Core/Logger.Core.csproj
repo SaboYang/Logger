@@ -9,5 +9,7 @@
 
   <ItemGroup>
     <Compile Remove="LogStore.cs" />
+    <Compile Remove="FileLogWriter.cs" />
+    <Compile Remove="LoggerSessionInfo.cs" />
   </ItemGroup>
 </Project>

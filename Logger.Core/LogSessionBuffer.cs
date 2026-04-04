@@ -4,15 +4,17 @@ using Logger.Core.Models;
 
 namespace Logger.Core
 {
-    internal sealed class LogSessionBuffer : ILoggerOutput, ILogSessionSource
+    internal sealed class LogSessionBuffer : ILoggerOutput, ILogSessionSource, ILogLevelThreshold
     {
         private readonly object _syncRoot = new object();
         private readonly List<LogEntry> _entries = new List<LogEntry>();
-        private readonly LoggerSessionInfo _sessionInfo;
+        private readonly LogStorageContext _sessionInfo;
+        private LogLevel _minimumLevel;
 
-        public LogSessionBuffer(LoggerSessionInfo sessionInfo)
+        public LogSessionBuffer(LogStorageContext sessionInfo)
         {
             _sessionInfo = sessionInfo ?? throw new ArgumentNullException(nameof(sessionInfo));
+            _minimumLevel = sessionInfo.MinimumLevel;
         }
 
         public Guid SessionId
@@ -22,7 +24,7 @@ namespace Logger.Core
 
         public DateTime SessionStartedAt
         {
-            get { return _sessionInfo.StartedAt; }
+            get { return _sessionInfo.SessionStartedAt; }
         }
 
         public int SessionEntryCount
@@ -32,6 +34,24 @@ namespace Logger.Core
                 lock (_syncRoot)
                 {
                     return _entries.Count;
+                }
+            }
+        }
+
+        public LogLevel MinimumLevel
+        {
+            get
+            {
+                lock (_syncRoot)
+                {
+                    return _minimumLevel;
+                }
+            }
+            set
+            {
+                lock (_syncRoot)
+                {
+                    _minimumLevel = value;
                 }
             }
         }
@@ -81,6 +101,11 @@ namespace Logger.Core
 
             lock (_syncRoot)
             {
+                if (level < _minimumLevel)
+                {
+                    return;
+                }
+
                 _entries.Add(new LogEntry(DateTime.Now, level, normalizedMessage));
             }
         }
@@ -95,7 +120,13 @@ namespace Logger.Core
 
             lock (_syncRoot)
             {
-                _entries.AddRange(normalizedEntries);
+                foreach (LogEntry entry in normalizedEntries)
+                {
+                    if (entry != null && entry.Level >= _minimumLevel)
+                    {
+                        _entries.Add(entry);
+                    }
+                }
             }
         }
 

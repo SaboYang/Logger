@@ -29,9 +29,11 @@ namespace Logger.WinForms.Demo
         private readonly Button _openWpfHostButton;
         private readonly Button _openFactoryDemoButton;
         private readonly Button _openFileDemoButton;
+        private readonly Button _openStorageDemoButton;
         private readonly NumericUpDown _stressCountInput;
         private readonly Label _statusLabel;
         private readonly StressSummaryPanel _summaryPanel;
+        private readonly CodeSamplePanel _codeSamplePanel;
         private readonly ILoggerOutput _logger;
         private bool _isStressTesting;
 
@@ -50,9 +52,10 @@ namespace Logger.WinForms.Demo
             {
                 Dock = DockStyle.Fill,
                 ColumnCount = 1,
-                RowCount = 4,
+                RowCount = 5,
                 Padding = new Padding(12)
             };
+            rootLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             rootLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             rootLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             rootLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
@@ -62,7 +65,7 @@ namespace Logger.WinForms.Demo
             {
                 Dock = DockStyle.Top,
                 AutoSize = true,
-                ColumnCount = 9,
+                ColumnCount = 10,
                 RowCount = 1,
                 Margin = new Padding(0, 0, 0, 10)
             };
@@ -72,7 +75,10 @@ namespace Logger.WinForms.Demo
             toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
 
             _sampleButton = new Button
@@ -130,6 +136,17 @@ namespace Logger.WinForms.Demo
             };
             _openFileDemoButton.Click += OpenFileDemoButton_Click;
 
+            _openStorageDemoButton = new Button
+            {
+                AutoSize = true,
+                Height = 34,
+                Margin = new Padding(0, 0, 12, 0),
+                Padding = new Padding(12, 0, 12, 0),
+                Text = "打开存储 Demo",
+                UseVisualStyleBackColor = true
+            };
+            _openStorageDemoButton.Click += OpenStorageDemoButton_Click;
+
             Label countLabel = new Label
             {
                 AutoSize = true,
@@ -171,6 +188,29 @@ namespace Logger.WinForms.Demo
             _summaryPanel = new StressSummaryPanel();
             _summaryPanel.UpdateSummary(StressTestSummary.CreateIdle("WinForms 日志控件压测", "点击“日志压力测试”开始执行。"));
 
+            _codeSamplePanel = new CodeSamplePanel
+            {
+                CodeText =
+@"using Logger.Core;
+using Logger.WinForms.Controls;
+
+ILoggerOutput logger = LogManager.Factory.CreateLogger(""MyApp.Main"");
+
+var logPanel = new LogPanelControl
+{
+    Dock = DockStyle.Fill,
+    Header = ""应用日志"",
+    Logger = logger,
+    MaxLogEntries = 30000
+};
+
+Controls.Add(logPanel);
+
+logger.AddInfo(""应用启动"");
+logger.AddSuccess(""日志控件已绑定"");
+logger.AddError(""line1\r\nline2"");"
+            };
+
             _logPanel = new LogPanelControl
             {
                 Dock = DockStyle.Fill,
@@ -185,14 +225,16 @@ namespace Logger.WinForms.Demo
             toolbar.Controls.Add(_openWpfHostButton, 2, 0);
             toolbar.Controls.Add(_openFactoryDemoButton, 3, 0);
             toolbar.Controls.Add(_openFileDemoButton, 4, 0);
-            toolbar.Controls.Add(countLabel, 5, 0);
-            toolbar.Controls.Add(_stressCountInput, 6, 0);
-            toolbar.Controls.Add(_statusLabel, 8, 0);
+            toolbar.Controls.Add(_openStorageDemoButton, 5, 0);
+            toolbar.Controls.Add(countLabel, 6, 0);
+            toolbar.Controls.Add(_stressCountInput, 7, 0);
+            toolbar.Controls.Add(_statusLabel, 9, 0);
 
             rootLayout.Controls.Add(toolbar, 0, 0);
             rootLayout.Controls.Add(infoLabel, 0, 1);
             rootLayout.Controls.Add(_summaryPanel, 0, 2);
-            rootLayout.Controls.Add(_logPanel, 0, 3);
+            rootLayout.Controls.Add(_codeSamplePanel, 0, 3);
+            rootLayout.Controls.Add(_logPanel, 0, 4);
 
             Controls.Add(rootLayout);
 
@@ -209,6 +251,7 @@ namespace Logger.WinForms.Demo
             _logger.AddInfo("点击“打开 WPF 宿主”可以在 WinForms 窗体中展示封装后的 WPF 日志控件。");
             _logger.AddInfo("点击“打开工厂 Demo”可以查看 ILoggerFactory 与 LoggerService 的接口用法演示。");
             _logger.AddInfo("点击“打开文件 Demo”可以同时验证本地文件落盘和文件内容预览。");
+            _logger.AddInfo("点击“打开存储 Demo”可以切换文本文件、CSV 和自定义后端，验证可扩展存储。");
             _logger.AddInfo("如果要直接跑封装控件压测，可执行：Logger.WinForms.Demo.exe --wpf-host --stress --close-after-stress");
             WriteLevelSamples();
             UpdateStatus("已加载等级示例");
@@ -258,6 +301,14 @@ namespace Logger.WinForms.Demo
             demoForm.Show(this);
             _logger.AddInfo("已打开本地日志文件 Demo。");
             UpdateStatus("已打开文件 Demo");
+        }
+
+        private void OpenStorageDemoButton_Click(object sender, EventArgs e)
+        {
+            StorageBackendDemoForm demoForm = new StorageBackendDemoForm();
+            demoForm.Show(this);
+            _logger.AddInfo("已打开可扩展存储 Demo。");
+            UpdateStatus("已打开存储 Demo");
         }
 
         private void WriteLevelSamples()
@@ -353,6 +404,8 @@ namespace Logger.WinForms.Demo
             _stressButton.Enabled = enabled;
             _openWpfHostButton.Enabled = enabled;
             _openFactoryDemoButton.Enabled = enabled;
+            _openFileDemoButton.Enabled = enabled;
+            _openStorageDemoButton.Enabled = enabled;
             _stressCountInput.Enabled = enabled;
         }
 

@@ -5,12 +5,13 @@ using Logger.Core.Models;
 
 namespace Logger.Core
 {
-    internal sealed class CompositeLogger : ILoggerOutput, ILogViewSource, ILogSessionSource, ILogFileSource
+    internal sealed class CompositeLogger : ILoggerOutput, ILogViewSource, ILogSessionSource, ILogFileSource, ILogLevelThreshold
     {
         private readonly ILoggerOutput[] _outputs;
         private readonly ILogViewSource _viewSource;
         private readonly ILogSessionSource _sessionSource;
         private readonly ILogFileSource _fileSource;
+        private LogLevel _minimumLevel = LogLevel.Info;
 
         public CompositeLogger(
             ILogViewSource viewSource,
@@ -65,6 +66,16 @@ namespace Logger.Core
             get { return _fileSource != null ? _fileSource.LogFilePath : null; }
         }
 
+        public LogLevel MinimumLevel
+        {
+            get { return _minimumLevel; }
+            set
+            {
+                _minimumLevel = value;
+                PropagateMinimumLevel(value);
+            }
+        }
+
         public void AddTrace(string message)
         {
             AddLog(LogLevel.Trace, message);
@@ -102,6 +113,11 @@ namespace Logger.Core
 
         public void AddLog(LogLevel level, string message)
         {
+            if (level < _minimumLevel)
+            {
+                return;
+            }
+
             foreach (ILoggerOutput output in _outputs)
             {
                 output?.AddLog(level, message);
@@ -116,9 +132,15 @@ namespace Logger.Core
                 return;
             }
 
+            List<LogEntry> filteredEntries = FilterEntries(entryBatch, _minimumLevel);
+            if (filteredEntries.Count == 0)
+            {
+                return;
+            }
+
             foreach (ILoggerOutput output in _outputs)
             {
-                output?.AddLogs(entryBatch);
+                output?.AddLogs(filteredEntries);
             }
         }
 
@@ -146,6 +168,40 @@ namespace Logger.Core
             }
 
             return snapshot;
+        }
+
+        private void PropagateMinimumLevel(LogLevel minimumLevel)
+        {
+            SetMinimumLevel(_viewSource as ILogLevelThreshold, minimumLevel);
+            SetMinimumLevel(_sessionSource as ILogLevelThreshold, minimumLevel);
+
+            foreach (ILoggerOutput output in _outputs)
+            {
+                SetMinimumLevel(output as ILogLevelThreshold, minimumLevel);
+            }
+        }
+
+        private static void SetMinimumLevel(ILogLevelThreshold threshold, LogLevel minimumLevel)
+        {
+            if (threshold != null)
+            {
+                threshold.MinimumLevel = minimumLevel;
+            }
+        }
+
+        private static List<LogEntry> FilterEntries(List<LogEntry> entries, LogLevel minimumLevel)
+        {
+            List<LogEntry> filteredEntries = new List<LogEntry>(entries.Count);
+
+            foreach (LogEntry entry in entries)
+            {
+                if (entry != null && entry.Level >= minimumLevel)
+                {
+                    filteredEntries.Add(entry);
+                }
+            }
+
+            return filteredEntries;
         }
     }
 }

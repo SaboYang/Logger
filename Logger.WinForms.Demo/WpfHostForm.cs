@@ -28,6 +28,7 @@ namespace Logger.WinForms.Demo
         private readonly Button _stressButton;
         private readonly Label _statusLabel;
         private readonly StressSummaryPanel _summaryPanel;
+        private readonly CodeSamplePanel _codeSamplePanel;
         private readonly bool _autoRunStressTest;
         private readonly bool _closeAfterStressTest;
         private readonly int _stressLogCount;
@@ -70,9 +71,10 @@ namespace Logger.WinForms.Demo
             {
                 Dock = DockStyle.Fill,
                 ColumnCount = 1,
-                RowCount = 4,
+                RowCount = 5,
                 Padding = new Padding(12)
             };
+            rootLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             rootLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             rootLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             rootLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
@@ -135,6 +137,29 @@ namespace Logger.WinForms.Demo
             _summaryPanel = new StressSummaryPanel();
             _summaryPanel.UpdateSummary(StressTestSummary.CreateIdle("WPF 宿主控件压测", "点击“WPF 压力测试”开始执行。"));
 
+            _codeSamplePanel = new CodeSamplePanel
+            {
+                CodeText =
+@"using Logger.Core;
+using Logger.WinForms.Controls;
+
+ILoggerOutput logger = LogManager.Factory.CreateLogger(""MyApp.WpfHost"");
+
+var hostPanel = new WpfLogPanelControl
+{
+    Dock = DockStyle.Fill,
+    Header = ""WPF 日志演示"",
+    Logger = logger,
+    MaxLogEntries = 30000
+};
+
+Controls.Add(hostPanel);
+
+logger.AddInfo(""WPF host ready"");
+logger.AddSuccess(""Logger.Wpf 已封装到 WinForms"");
+logger.AddError(""line1\r\nline2"");"
+            };
+
             _wpfLogPanel = new WpfLogPanelControl
             {
                 Dock = DockStyle.Fill,
@@ -151,7 +176,8 @@ namespace Logger.WinForms.Demo
             rootLayout.Controls.Add(toolbar, 0, 0);
             rootLayout.Controls.Add(infoLabel, 0, 1);
             rootLayout.Controls.Add(_summaryPanel, 0, 2);
-            rootLayout.Controls.Add(_wpfLogPanel, 0, 3);
+            rootLayout.Controls.Add(_codeSamplePanel, 0, 3);
+            rootLayout.Controls.Add(_wpfLogPanel, 0, 4);
 
             Controls.Add(rootLayout);
 

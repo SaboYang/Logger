@@ -1,28 +1,54 @@
 using System;
 using System.IO;
+using Logger.Core.Models;
 
 namespace Logger.Core
 {
     public sealed class LogStoreLoggerFactory : ILoggerFactory
     {
-        private readonly string _logRootDirectoryPath;
+        private readonly ILogStorageBackendFactory _storageBackendFactory;
+        private readonly LogLevel _minimumLevel;
 
-        public LogStoreLoggerFactory(string logRootDirectoryPath = null)
+        public LogStoreLoggerFactory(string logRootDirectoryPath = null, LogLevel minimumLevel = LogLevel.Info)
+            : this(new TextFileLogStorageBackendFactory(logRootDirectoryPath), minimumLevel)
         {
-            _logRootDirectoryPath = string.IsNullOrWhiteSpace(logRootDirectoryPath)
-                ? Path.Combine(AppContext.BaseDirectory, "Logs")
-                : logRootDirectoryPath.Trim();
+        }
+
+        public LogStoreLoggerFactory(ILogStorageBackendFactory storageBackendFactory, LogLevel minimumLevel = LogLevel.Info)
+        {
+            _storageBackendFactory = storageBackendFactory;
+            _minimumLevel = minimumLevel;
         }
 
         public ILoggerOutput CreateLogger(string name)
         {
             string loggerName = string.IsNullOrWhiteSpace(name) ? "Default" : name.Trim();
-            LoggerSessionInfo sessionInfo = new LoggerSessionInfo(loggerName);
+            LogStorageContext storageContext = new LogStorageContext(loggerName, Guid.NewGuid(), DateTime.Now, _minimumLevel);
             LogStore logStore = new LogStore();
-            LogSessionBuffer sessionBuffer = new LogSessionBuffer(sessionInfo);
-            FileLogWriter fileLogWriter = new FileLogWriter(sessionInfo, _logRootDirectoryPath);
+            LogSessionBuffer sessionBuffer = new LogSessionBuffer(storageContext);
+            ILogStorageBackend storageBackend = _storageBackendFactory != null
+                ? _storageBackendFactory.CreateBackend(storageContext)
+                : null;
+            StorageLogWriter storageWriter = storageBackend != null
+                ? new StorageLogWriter(storageContext, storageBackend)
+                : null;
 
-            return new CompositeLogger(logStore, sessionBuffer, fileLogWriter, logStore, sessionBuffer, fileLogWriter);
+            if (storageWriter == null)
+            {
+                CompositeLogger loggerWithoutStorage = new CompositeLogger(logStore, sessionBuffer, null, logStore, sessionBuffer);
+                loggerWithoutStorage.MinimumLevel = _minimumLevel;
+                return loggerWithoutStorage;
+            }
+
+            CompositeLogger logger = new CompositeLogger(
+                logStore,
+                sessionBuffer,
+                storageBackend as ILogFileSource,
+                logStore,
+                sessionBuffer,
+                storageWriter);
+            logger.MinimumLevel = _minimumLevel;
+            return logger;
         }
     }
 }

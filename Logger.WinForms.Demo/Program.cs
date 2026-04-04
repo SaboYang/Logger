@@ -24,6 +24,12 @@ namespace Logger.WinForms.Demo
                 return;
             }
 
+            if (options.OpenStorageDemo)
+            {
+                Application.Run(new StorageBackendDemoForm());
+                return;
+            }
+
             if (options.OpenWpfHost)
             {
                 using (WpfHostForm hostForm = new WpfHostForm(options.StressLogCount, options.AutoRunStressTest, options.CloseAfterStressTest))
@@ -50,6 +56,8 @@ namespace Logger.WinForms.Demo
 
             public bool OpenFileDemo { get; private set; }
 
+            public bool OpenStorageDemo { get; private set; }
+
             public int StressLogCount { get; private set; } = 30000;
 
             public static DemoLaunchOptions Parse(string[] args)
@@ -74,6 +82,10 @@ namespace Logger.WinForms.Demo
                     else if (string.Equals(arg, "--file-demo", StringComparison.OrdinalIgnoreCase))
                     {
                         options.OpenFileDemo = true;
+                    }
+                    else if (string.Equals(arg, "--storage-demo", StringComparison.OrdinalIgnoreCase))
+                    {
+                        options.OpenStorageDemo = true;
                     }
                     else if (string.Equals(arg, "--stress", StringComparison.OrdinalIgnoreCase))
                     {
