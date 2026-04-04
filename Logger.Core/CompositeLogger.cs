@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Threading;
 using Logger.Core.Models;
 
 namespace Logger.Core
@@ -11,7 +12,7 @@ namespace Logger.Core
         private readonly ILogViewSource _viewSource;
         private readonly ILogSessionSource _sessionSource;
         private readonly ILogFileSource _fileSource;
-        private LogLevel _minimumLevel = LogLevel.Info;
+        private int _minimumLevel = (int)LogLevel.Info;
 
         public CompositeLogger(
             ILogViewSource viewSource,
@@ -68,10 +69,10 @@ namespace Logger.Core
 
         public LogLevel MinimumLevel
         {
-            get { return _minimumLevel; }
+            get { return (LogLevel)Volatile.Read(ref _minimumLevel); }
             set
             {
-                _minimumLevel = value;
+                Interlocked.Exchange(ref _minimumLevel, (int)value);
                 PropagateMinimumLevel(value);
             }
         }
@@ -113,7 +114,7 @@ namespace Logger.Core
 
         public void AddLog(LogLevel level, string message)
         {
-            if (level < _minimumLevel)
+            if (!LogEntryFilter.MeetsMinimumLevel(level, MinimumLevel))
             {
                 return;
             }
@@ -132,7 +133,7 @@ namespace Logger.Core
                 return;
             }
 
-            List<LogEntry> filteredEntries = FilterEntries(entryBatch, _minimumLevel);
+            List<LogEntry> filteredEntries = LogEntryFilter.FilterEntries(entryBatch, MinimumLevel);
             if (filteredEntries.Count == 0)
             {
                 return;
@@ -189,19 +190,5 @@ namespace Logger.Core
             }
         }
 
-        private static List<LogEntry> FilterEntries(List<LogEntry> entries, LogLevel minimumLevel)
-        {
-            List<LogEntry> filteredEntries = new List<LogEntry>(entries.Count);
-
-            foreach (LogEntry entry in entries)
-            {
-                if (entry != null && entry.Level >= minimumLevel)
-                {
-                    filteredEntries.Add(entry);
-                }
-            }
-
-            return filteredEntries;
-        }
     }
 }

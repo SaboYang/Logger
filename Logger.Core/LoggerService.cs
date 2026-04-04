@@ -1,13 +1,13 @@
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
+using System.Threading;
 
 namespace Logger.Core
 {
     public sealed class LoggerService : ILoggerService
     {
-        private readonly object _syncRoot = new object();
-        private readonly Dictionary<string, ILoggerOutput> _loggers =
-            new Dictionary<string, ILoggerOutput>(StringComparer.OrdinalIgnoreCase);
+        private readonly ConcurrentDictionary<string, Lazy<ILoggerOutput>> _loggers =
+            new ConcurrentDictionary<string, Lazy<ILoggerOutput>>(StringComparer.OrdinalIgnoreCase);
 
         private readonly ILoggerFactory _factory;
 
@@ -35,39 +35,32 @@ namespace Logger.Core
 
         public ILoggerOutput GetLogger(string name)
         {
-            string normalizedName = NormalizeName(name);
-
-            lock (_syncRoot)
-            {
-                ILoggerOutput logger;
-                if (!_loggers.TryGetValue(normalizedName, out logger))
-                {
-                    logger = _factory.CreateLogger(normalizedName) ?? new LogStore();
-                    _loggers.Add(normalizedName, logger);
-                }
-
-                return logger;
-            }
+            string normalizedName = LoggerPathUtility.NormalizeLoggerName(name);
+            Lazy<ILoggerOutput> logger = _loggers.GetOrAdd(
+                normalizedName,
+                CreateLoggerEntry);
+            return logger.Value;
         }
 
         public bool TryGetLogger(string name, out ILoggerOutput logger)
         {
-            string normalizedName = NormalizeName(name);
-
-            lock (_syncRoot)
+            string normalizedName = LoggerPathUtility.NormalizeLoggerName(name);
+            Lazy<ILoggerOutput> loggerEntry;
+            if (_loggers.TryGetValue(normalizedName, out loggerEntry))
             {
-                return _loggers.TryGetValue(normalizedName, out logger);
+                logger = loggerEntry.Value;
+                return true;
             }
+
+            logger = null;
+            return false;
         }
 
-        private static string NormalizeName(string name)
+        private Lazy<ILoggerOutput> CreateLoggerEntry(string normalizedName)
         {
-            if (string.IsNullOrWhiteSpace(name))
-            {
-                return "Default";
-            }
-
-            return name.Trim();
+            return new Lazy<ILoggerOutput>(
+                () => _factory.CreateLogger(normalizedName) ?? new LogStore(),
+                LazyThreadSafetyMode.ExecutionAndPublication);
         }
     }
 }

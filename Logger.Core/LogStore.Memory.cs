@@ -98,7 +98,7 @@ namespace Logger.Core
 
             lock (_syncRoot)
             {
-                if (level < _minimumLevel)
+                if (!LogEntryFilter.MeetsMinimumLevel(level, _minimumLevel))
                 {
                     return;
                 }
@@ -118,7 +118,7 @@ namespace Logger.Core
 
             lock (_syncRoot)
             {
-                List<LogEntry> filteredEntries = FilterEntries(normalizedEntries, _minimumLevel);
+                List<LogEntry> filteredEntries = LogEntryFilter.FilterEntries(normalizedEntries, _minimumLevel);
                 if (filteredEntries.Count == 0)
                 {
                     return;
@@ -127,21 +127,6 @@ namespace Logger.Core
                 _entries.AddRange(filteredEntries);
                 TrimEntries();
             }
-        }
-
-        private static List<LogEntry> FilterEntries(List<LogEntry> entries, LogLevel minimumLevel)
-        {
-            List<LogEntry> filteredEntries = new List<LogEntry>(entries.Count);
-
-            foreach (LogEntry entry in entries)
-            {
-                if (entry != null && entry.Level >= minimumLevel)
-                {
-                    filteredEntries.Add(entry);
-                }
-            }
-
-            return filteredEntries;
         }
 
         private void TrimEntries()

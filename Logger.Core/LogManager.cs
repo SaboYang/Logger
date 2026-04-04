@@ -1,21 +1,15 @@
 using System;
+using System.Threading;
 
 namespace Logger.Core
 {
     public static class LogManager
     {
-        private static readonly object SyncRoot = new object();
         private static ILoggerService _service = LoggerService.Shared;
 
         public static ILoggerService Service
         {
-            get
-            {
-                lock (SyncRoot)
-                {
-                    return _service;
-                }
-            }
+            get { return Volatile.Read(ref _service); }
         }
 
         public static ILoggerFactory Factory
@@ -45,10 +39,7 @@ namespace Logger.Core
                 throw new ArgumentNullException(nameof(service));
             }
 
-            lock (SyncRoot)
-            {
-                _service = service;
-            }
+            Volatile.Write(ref _service, service);
         }
     }
 }

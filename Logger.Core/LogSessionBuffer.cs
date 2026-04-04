@@ -101,7 +101,7 @@ namespace Logger.Core
 
             lock (_syncRoot)
             {
-                if (level < _minimumLevel)
+                if (!LogEntryFilter.MeetsMinimumLevel(level, _minimumLevel))
                 {
                     return;
                 }
@@ -120,13 +120,7 @@ namespace Logger.Core
 
             lock (_syncRoot)
             {
-                foreach (LogEntry entry in normalizedEntries)
-                {
-                    if (entry != null && entry.Level >= _minimumLevel)
-                    {
-                        _entries.Add(entry);
-                    }
-                }
+                _entries.AddRange(LogEntryFilter.FilterEntries(normalizedEntries, _minimumLevel));
             }
         }
 

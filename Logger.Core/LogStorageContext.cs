@@ -7,7 +7,7 @@ namespace Logger.Core
     {
         public LogStorageContext(string loggerName, Guid sessionId, DateTime sessionStartedAt, LogLevel minimumLevel = LogLevel.Info)
         {
-            LoggerName = string.IsNullOrWhiteSpace(loggerName) ? "Default" : loggerName.Trim();
+            LoggerName = LoggerPathUtility.NormalizeLoggerName(loggerName);
             SessionId = sessionId == Guid.Empty ? Guid.NewGuid() : sessionId;
             SessionStartedAt = sessionStartedAt == DateTime.MinValue ? DateTime.Now : sessionStartedAt;
             MinimumLevel = minimumLevel;

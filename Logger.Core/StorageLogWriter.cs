@@ -66,7 +66,9 @@ namespace Logger.Core
         public void AddLog(LogLevel level, string message)
         {
             string normalizedMessage = LogEntrySanitizer.NormalizeMessage(message);
-            if (normalizedMessage == null || Volatile.Read(ref _outputFaulted) != 0 || level < MinimumLevel)
+            if (normalizedMessage == null
+                || Volatile.Read(ref _outputFaulted) != 0
+                || !LogEntryFilter.MeetsMinimumLevel(level, MinimumLevel))
             {
                 return;
             }
@@ -87,28 +89,13 @@ namespace Logger.Core
                 return;
             }
 
-            List<LogEntry> filteredEntries = FilterEntries(normalizedEntries, MinimumLevel);
+            List<LogEntry> filteredEntries = LogEntryFilter.FilterEntries(normalizedEntries, MinimumLevel);
             if (filteredEntries.Count == 0)
             {
                 return;
             }
 
             EnqueueEntries(filteredEntries);
-        }
-
-        private static List<LogEntry> FilterEntries(List<LogEntry> entries, LogLevel minimumLevel)
-        {
-            List<LogEntry> filteredEntries = new List<LogEntry>(entries.Count);
-
-            foreach (LogEntry entry in entries)
-            {
-                if (entry != null && entry.Level >= minimumLevel)
-                {
-                    filteredEntries.Add(entry);
-                }
-            }
-
-            return filteredEntries;
         }
 
         private void EnqueueEntries(IEnumerable<LogEntry> entries)
