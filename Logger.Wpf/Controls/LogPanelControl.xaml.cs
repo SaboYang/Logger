@@ -12,6 +12,13 @@ namespace Logger.Wpf.Controls
 {
     public partial class LogPanelControl : UserControl
     {
+        private const LogLevelFilter DefaultLevelFilter =
+            LogLevelFilter.Info |
+            LogLevelFilter.Success |
+            LogLevelFilter.Warn |
+            LogLevelFilter.Error |
+            LogLevelFilter.Fatal;
+
         private static readonly LogLevel[] FilterLevels =
         {
             LogLevel.Trace,
@@ -68,7 +75,7 @@ namespace Logger.Wpf.Controls
                 nameof(LevelFilter),
                 typeof(LogLevelFilter),
                 typeof(LogPanelControl),
-                new PropertyMetadata(LogLevelFilter.All, OnLevelFilterChanged));
+                new PropertyMetadata(DefaultLevelFilter, OnLevelFilterChanged));
 
         public static readonly DependencyProperty SearchTextProperty =
             DependencyProperty.Register(

@@ -14,6 +14,12 @@ namespace Logger.WinForms.Controls
     public class LogPanelControl : UserControl
     {
         private const int SearchRefreshDelayMilliseconds = 180;
+        private const LogLevelFilter DefaultLevelFilter =
+            LogLevelFilter.Info |
+            LogLevelFilter.Success |
+            LogLevelFilter.Warn |
+            LogLevelFilter.Error |
+            LogLevelFilter.Fatal;
 
         private static readonly LogLevel[] FilterLevels =
         {
@@ -46,7 +52,7 @@ namespace Logger.WinForms.Controls
         private string _searchText = string.Empty;
         private bool _autoScrollToEnd = true;
         private int _maxLogEntries = 500;
-        private LogLevelFilter _levelFilter = LogLevelFilter.All;
+        private LogLevelFilter _levelFilter = DefaultLevelFilter;
         private ILoggerOutput _currentLogger;
         private ILogViewSource _currentViewSource;
         private LogEntry _clearAnchorEntry;
@@ -208,7 +214,7 @@ namespace Logger.WinForms.Controls
         }
 
         [Category("Behavior")]
-        [DefaultValue(LogLevelFilter.All)]
+        [DefaultValue(DefaultLevelFilter)]
         public LogLevelFilter LevelFilter
         {
             get { return _levelFilter; }

@@ -12,11 +12,18 @@ namespace Logger.WinForms.Controls
     [DesignerCategory("Code")]
     public class WpfLogPanelControl : UserControl
     {
+        private const LogLevelFilter DefaultLevelFilter =
+            LogLevelFilter.Info |
+            LogLevelFilter.Success |
+            LogLevelFilter.Warn |
+            LogLevelFilter.Error |
+            LogLevelFilter.Fatal;
+
         private readonly ElementHost _elementHost;
         private readonly WpfLogPanel _wpfLogPanel;
         private string _header = "运行日志";
         private int _maxLogEntries = 500;
-        private LogLevelFilter _levelFilter = LogLevelFilter.All;
+        private LogLevelFilter _levelFilter = DefaultLevelFilter;
         private string _searchText = string.Empty;
 
         public WpfLogPanelControl()
@@ -65,7 +72,7 @@ namespace Logger.WinForms.Controls
         }
 
         [Category("Behavior")]
-        [DefaultValue(LogLevelFilter.All)]
+        [DefaultValue(DefaultLevelFilter)]
         public LogLevelFilter LevelFilter
         {
             get { return _levelFilter; }
