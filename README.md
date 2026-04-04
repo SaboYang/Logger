@@ -154,6 +154,29 @@ public partial class MainForm : Form
 }
 ```
 
+## 合并多个 ILoggerOutput
+
+如果你要把多个 `ILoggerOutput` 聚合成一个新的 `ILoggerOutput`，可以使用 `LogManager.CreateMergedLogger(...)`：
+
+```csharp
+using Logger.Core;
+
+ILoggerOutput appLogger = LogManager.GetLogger("App");
+ILoggerOutput deviceLogger = LogManager.GetLogger("Device");
+
+ILoggerOutput mergedLogger = LogManager.CreateMergedLogger(appLogger, deviceLogger);
+logPanel.Logger = mergedLogger;
+
+mergedLogger.AddInfo("这条日志会同时写入 App 和 Device");
+```
+
+说明：
+
+- 新的 `mergedLogger` 本身也实现了 `ILogViewSource`，可以直接绑定到 WPF / WinForms 控件
+- UI 上会看到多个子 logger 的聚合结果
+- 对 `mergedLogger` 的写入会分发到所有子 logger
+- 只有实现了 `ILogViewSource` 的子 logger，才会参与聚合显示
+
 ## 自定义存储后端
 
 如果要把日志改成写文本、CSV、数据库或其他介质，实现这两个接口：

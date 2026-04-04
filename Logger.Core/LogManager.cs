@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 
 namespace Logger.Core
@@ -30,6 +31,16 @@ namespace Logger.Core
         public static bool TryGetLogger(string name, out ILoggerOutput logger)
         {
             return Service.TryGetLogger(name, out logger);
+        }
+
+        public static ILoggerOutput CreateMergedLogger(params ILoggerOutput[] loggers)
+        {
+            return new MergedLogger(loggers);
+        }
+
+        public static ILoggerOutput CreateMergedLogger(IEnumerable<ILoggerOutput> loggers)
+        {
+            return new MergedLogger(loggers);
         }
 
         public static void Configure(ILoggerService service)

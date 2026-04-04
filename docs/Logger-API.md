@@ -78,6 +78,12 @@ public interface ILoggerFactory
 ILoggerOutput logger = LogManager.GetLogger("MyApp");
 ```
 
+也可以通过它创建聚合 logger：
+
+```csharp
+ILoggerOutput mergedLogger = LogManager.CreateMergedLogger(logger1, logger2);
+```
+
 ---
 
 ## 3. 同名 logger 规则
@@ -137,6 +143,28 @@ logger.AddLogs(new List<LogEntry>
     new LogEntry(DateTime.Now, LogLevel.Error, "批量日志 3")
 });
 ```
+
+### 4.3 聚合多个 logger
+
+```csharp
+using Logger.Core;
+
+ILoggerOutput appLogger = LogManager.GetLogger("App");
+ILoggerOutput deviceLogger = LogManager.GetLogger("Device");
+ILoggerOutput auditLogger = LogManager.GetLogger("Audit");
+
+ILoggerOutput mergedLogger =
+    LogManager.CreateMergedLogger(appLogger, deviceLogger, auditLogger);
+
+mergedLogger.AddInfo("这条日志会同时写入 3 个 logger");
+```
+
+行为说明：
+
+- `mergedLogger` 自己也是一个新的 `ILoggerOutput`
+- 写入 `mergedLogger` 时，会把日志分发到所有子 logger
+- 如果子 logger 实现了 `ILogViewSource`，它们的日志会被聚合到新的可视集合里
+- 因此 `mergedLogger` 可以直接绑定到 UI 控件
 
 ---
 
@@ -245,6 +273,7 @@ public partial class MainWindow
 
 - `ClearLogs()` 是 UI 视图清空，不是业务日志入口
 - 业务代码应写 `ILoggerOutput`，而不是调用控件的 `AddInfo/AddError`
+- `Logger` 也可以绑定 `LogManager.CreateMergedLogger(...)` 返回的聚合 logger
 
 ---
 
@@ -322,6 +351,7 @@ public partial class MainForm : Form
 - `Logger`：绑定的日志接口
 - `LevelFilter`：UI 等级过滤
 - `SearchText`：UI 搜索文本
+- `Logger` 也可以绑定 `LogManager.CreateMergedLogger(...)` 返回的聚合 logger
 
 ---
 

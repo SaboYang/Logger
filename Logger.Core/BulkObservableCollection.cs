@@ -47,5 +47,24 @@ namespace Logger.Core
             OnPropertyChanged(new PropertyChangedEventArgs("Item[]"));
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, removedItems, index));
         }
+
+        public void ReplaceAll(IList<T> items)
+        {
+            CheckReentrancy();
+
+            Items.Clear();
+
+            if (items != null)
+            {
+                for (int index = 0; index < items.Count; index++)
+                {
+                    Items.Add(items[index]);
+                }
+            }
+
+            OnPropertyChanged(new PropertyChangedEventArgs(nameof(Count)));
+            OnPropertyChanged(new PropertyChangedEventArgs("Item[]"));
+            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+        }
     }
 }
