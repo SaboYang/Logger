@@ -179,7 +179,7 @@
                             BorderBrush="#FFD8E4F0"
                             BorderThickness="1"
                             CornerRadius="7"
-                            ToolTip="Search by time, level, or message">
+                            ToolTip="按时间、等级或内容搜索">
                         <Border.Style>
                             <Style TargetType="Border">
                                 <Setter Property="Visibility" Value="Collapsed" />
@@ -206,7 +206,7 @@
                                            FontSize="11"
                                            FontWeight="SemiBold"
                                            Foreground="#FF2563EB"
-                                           Text="Search" />
+                                           Text="搜索" />
                             </Border>
 
                             <Grid Grid.Column="1"
@@ -226,7 +226,7 @@
                                            FontFamily="Microsoft YaHei UI"
                                            FontSize="11"
                                            Foreground="#FF94A3B8"
-                                           Text="Search time / level / message">
+                                           Text="搜索时间 / 等级 / 内容">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
                                             <Setter Property="Visibility" Value="Collapsed" />
@@ -268,14 +268,14 @@
                                 VerticalAlignment="Center">
                         <Button x:Name="FilterButton"
                                 Margin="0,0,3,0"
-                                Content="Filter"
+                                Content="筛选"
                                 Style="{StaticResource FilterHeaderButtonStyle}"
                                 Click="FilterButton_Click" />
                         <Button Margin="0,0,3,0"
-                                Content="Copy"
+                                Content="复制全部"
                                 Style="{StaticResource HeaderActionButtonStyle}"
                                 Click="CopyButton_Click" />
-                        <Button Content="Clear View"
+                        <Button Content="清空显示"
                                 Style="{StaticResource DangerHeaderButtonStyle}"
                                 Click="ClearButton_Click" />
                     </StackPanel>

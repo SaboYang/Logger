@@ -117,7 +117,7 @@ namespace Logger.WinForms.Controls
 
             _copyButton = new Button
             {
-                Text = "Copy",
+                Text = "复制全部",
                 Width = 72,
                 Height = 28,
                 Margin = new Padding(0, 0, 8, 0),
@@ -546,10 +546,12 @@ namespace Logger.WinForms.Controls
             };
 
             ToolStripMenuItem selectAllItem = new ToolStripMenuItem("全选");
+            selectAllItem.Text = "全选";
             selectAllItem.Click += SelectAllFilterMenuItem_Click;
             menu.Items.Add(selectAllItem);
 
             ToolStripMenuItem clearAllItem = new ToolStripMenuItem("全不选");
+            clearAllItem.Text = "全不选";
             clearAllItem.Click += ClearAllFilterMenuItem_Click;
             menu.Items.Add(clearAllItem);
 
@@ -574,6 +576,7 @@ namespace Logger.WinForms.Controls
             {
                 AutoToolTip = false
             };
+            closeItem.Text = "取消";
             closeItem.Click += CloseFilterMenuItem_Click;
             menu.Items.Add(closeItem);
 

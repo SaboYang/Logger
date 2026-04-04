@@ -9,8 +9,12 @@ namespace Logger.Wpf.Converters
     public class LogLevelToBrushConverter : IValueConverter
     {
         private static readonly Brush TraceBrush = CreateBrush(148, 163, 184);
+        private static readonly Brush DebugBrush = CreateBrush(96, 165, 250);
+        private static readonly Brush InfoBrush = CreateBrush(34, 211, 238);
         private static readonly Brush SuccessBrush = CreateBrush(74, 222, 128);
-        private static readonly Brush FatalBrush = CreateBrush(244, 114, 182);
+        private static readonly Brush WarnBrush = CreateBrush(250, 204, 21);
+        private static readonly Brush ErrorBrush = CreateBrush(248, 113, 113);
+        private static readonly Brush FatalBrush = CreateBrush(244, 63, 94);
 
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
@@ -21,19 +25,19 @@ namespace Logger.Wpf.Converters
                 case LogLevel.Trace:
                     return TraceBrush;
                 case LogLevel.Debug:
-                    return Brushes.LightSkyBlue;
+                    return DebugBrush;
                 case LogLevel.Info:
-                    return Brushes.LightGreen;
+                    return InfoBrush;
                 case LogLevel.Success:
                     return SuccessBrush;
                 case LogLevel.Warn:
-                    return Brushes.Gold;
+                    return WarnBrush;
                 case LogLevel.Error:
-                    return Brushes.OrangeRed;
+                    return ErrorBrush;
                 case LogLevel.Fatal:
                     return FatalBrush;
                 default:
-                    return Brushes.LightGreen;
+                    return InfoBrush;
             }
         }
 
