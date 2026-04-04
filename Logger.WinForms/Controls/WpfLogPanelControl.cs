@@ -25,6 +25,7 @@ namespace Logger.WinForms.Controls
         private int _maxLogEntries = 500;
         private LogLevelFilter _levelFilter = DefaultLevelFilter;
         private string _searchText = string.Empty;
+        private bool _searchBoxVisible;
 
         public WpfLogPanelControl()
         {
@@ -33,7 +34,8 @@ namespace Logger.WinForms.Controls
                 Header = _header,
                 MaxLogEntries = _maxLogEntries,
                 LevelFilter = _levelFilter,
-                SearchText = _searchText
+                SearchText = _searchText,
+                SearchBoxVisible = _searchBoxVisible
             };
 
             _elementHost = new ElementHost
@@ -92,6 +94,18 @@ namespace Logger.WinForms.Controls
             {
                 _searchText = value ?? string.Empty;
                 ExecuteOnWpfThread(() => _wpfLogPanel.SearchText = _searchText);
+            }
+        }
+
+        [Category("Behavior")]
+        [DefaultValue(false)]
+        public bool SearchBoxVisible
+        {
+            get { return _searchBoxVisible; }
+            set
+            {
+                _searchBoxVisible = value;
+                ExecuteOnWpfThread(() => _wpfLogPanel.SearchBoxVisible = _searchBoxVisible);
             }
         }
 
@@ -164,6 +178,11 @@ namespace Logger.WinForms.Controls
         public void ClearLogs()
         {
             ExecuteOnWpfThread(_wpfLogPanel.ClearLogs);
+        }
+
+        public void CopyLogs()
+        {
+            ExecuteOnWpfThread(_wpfLogPanel.CopyLogs);
         }
 
         public bool IsLevelVisible(LogLevel level)

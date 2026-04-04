@@ -38,6 +38,7 @@ namespace Logger.WinForms.Controls
         private readonly Label _headerLabel;
         private readonly TextBox _searchTextBox;
         private readonly Button _filterButton;
+        private readonly Button _copyButton;
         private readonly Button _clearButton;
         private readonly ContextMenuStrip _filterMenu;
         private readonly System.Windows.Forms.Timer _searchRefreshTimer;
@@ -54,6 +55,7 @@ namespace Logger.WinForms.Controls
         private string _searchText = string.Empty;
         private bool _autoScrollToEnd = true;
         private bool _highThroughputMode = true;
+        private bool _searchBoxVisible;
         private int _maxLogEntries = 500;
         private LogLevelFilter _levelFilter = DefaultLevelFilter;
         private ILoggerOutput _currentLogger;
@@ -113,6 +115,17 @@ namespace Logger.WinForms.Controls
             };
             _filterButton.Click += FilterButton_Click;
 
+            _copyButton = new Button
+            {
+                Text = "Copy",
+                Width = 72,
+                Height = 28,
+                Margin = new Padding(0, 0, 8, 0),
+                FlatStyle = FlatStyle.System,
+                UseVisualStyleBackColor = true
+            };
+            _copyButton.Click += CopyButton_Click;
+
             _clearButton = new Button
             {
                 Text = "\u6e05\u7a7a\u65e5\u5fd7",
@@ -141,6 +154,7 @@ namespace Logger.WinForms.Controls
 
             _actionPanel.Controls.Add(_searchTextBox);
             _actionPanel.Controls.Add(_filterButton);
+            _actionPanel.Controls.Add(_copyButton);
             _actionPanel.Controls.Add(_clearButton);
             _headerPanel.Controls.Add(_headerLabel);
             _headerPanel.Controls.Add(_actionPanel);
@@ -185,6 +199,31 @@ namespace Logger.WinForms.Controls
                     _searchText = nextText;
                     UpdateSearchUi();
                     ScheduleSearchRefresh();
+                });
+            }
+        }
+
+        [Category("Behavior")]
+        [DefaultValue(false)]
+        public bool SearchBoxVisible
+        {
+            get { return _searchBoxVisible; }
+            set
+            {
+                ExecuteOnUiThread(() =>
+                {
+                    if (_searchBoxVisible == value)
+                    {
+                        return;
+                    }
+
+                    _searchBoxVisible = value;
+                    UpdateSearchUi();
+
+                    if (_searchBoxVisible)
+                    {
+                        FocusSearchTextBox();
+                    }
                 });
             }
         }
@@ -335,6 +374,20 @@ namespace Logger.WinForms.Controls
             });
         }
 
+        public void CopyLogs()
+        {
+            ExecuteOnUiThread(() =>
+            {
+                string copyText = BuildCopyText();
+                if (string.IsNullOrEmpty(copyText))
+                {
+                    return;
+                }
+
+                Clipboard.SetText(copyText);
+            });
+        }
+
         public bool IsLevelVisible(LogLevel level)
         {
             return LevelFilter.Includes(level);
@@ -381,6 +434,7 @@ namespace Logger.WinForms.Controls
                 _searchRefreshTimer.Tick -= SearchRefreshTimer_Tick;
                 _searchRefreshTimer.Stop();
                 _filterButton.Click -= FilterButton_Click;
+                _copyButton.Click -= CopyButton_Click;
                 _clearButton.Click -= ClearButton_Click;
                 _logGrid.CellFormatting -= LogGrid_CellFormatting;
                 _logGrid.CellValueNeeded -= LogGrid_CellValueNeeded;
@@ -828,6 +882,11 @@ namespace Logger.WinForms.Controls
             ClearLogs();
         }
 
+        private void CopyButton_Click(object sender, EventArgs e)
+        {
+            CopyLogs();
+        }
+
         private void ExecuteOnUiThread(Action action)
         {
             if (IsDisposed || Disposing)
@@ -1049,20 +1108,20 @@ namespace Logger.WinForms.Controls
                 return;
             }
 
-            if (string.Equals(_searchTextBox.Text, _searchText, StringComparison.Ordinal))
+            if (!string.Equals(_searchTextBox.Text, _searchText, StringComparison.Ordinal))
             {
-                return;
+                _updatingSearchText = true;
+                try
+                {
+                    _searchTextBox.Text = _searchText;
+                }
+                finally
+                {
+                    _updatingSearchText = false;
+                }
             }
 
-            _updatingSearchText = true;
-            try
-            {
-                _searchTextBox.Text = _searchText;
-            }
-            finally
-            {
-                _updatingSearchText = false;
-            }
+            _searchTextBox.Visible = _searchBoxVisible;
         }
 
         private string GetFilterButtonText()
@@ -1112,6 +1171,25 @@ namespace Logger.WinForms.Controls
             }
 
             return snapshot;
+        }
+
+        private string BuildCopyText()
+        {
+            if (_visibleEntries == null || _visibleEntries.Count == 0)
+            {
+                return string.Empty;
+            }
+
+            List<string> lines = new List<string>(_visibleEntries.Count);
+            foreach (LogEntry entry in _visibleEntries)
+            {
+                if (entry != null)
+                {
+                    lines.Add(FormatEntryText(entry));
+                }
+            }
+
+            return string.Join(Environment.NewLine, lines);
         }
 
         private void ApplyGridRenderMode()
@@ -1171,6 +1249,17 @@ namespace Logger.WinForms.Controls
             return stableVersion;
         }
 
+        private void FocusSearchTextBox()
+        {
+            if (_searchTextBox == null || !_searchTextBox.Visible)
+            {
+                return;
+            }
+
+            _searchTextBox.Focus();
+            _searchTextBox.SelectAll();
+        }
+
         private string NormalizeDisplayMessage(string message)
         {
             if (string.IsNullOrEmpty(message))
@@ -1184,6 +1273,20 @@ namespace Logger.WinForms.Controls
                 : normalized.Replace("\n", Environment.NewLine);
             normalized = normalized.Replace("\t", "    ");
             return normalized;
+        }
+
+        private static string FormatEntryText(LogEntry entry)
+        {
+            if (entry == null)
+            {
+                return string.Empty;
+            }
+
+            return string.Format(
+                "{0:yyyy-MM-dd HH:mm:ss.fff} [{1}] {2}",
+                entry.Timestamp,
+                entry.LevelText,
+                entry.Message ?? string.Empty);
         }
 
         private static string NormalizeSearchText(string searchText)

@@ -158,7 +158,7 @@
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="200" />
+                        <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
 
@@ -168,8 +168,10 @@
              FontWeight="Bold"
              Foreground="#FF0F172A" />
 
-                    <Border Grid.Column="1"
+                    <Border x:Name="SearchContainer"
+                            Grid.Column="1"
                             Margin="6,0,4,0"
+                            Width="200"
                             Padding="6,0,3,0"
                             Height="28"
                             VerticalAlignment="Center"
@@ -178,6 +180,16 @@
                             BorderThickness="1"
                             CornerRadius="7"
                             ToolTip="Search by time, level, or message">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SearchBoxVisible, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
@@ -232,7 +244,7 @@
                             </Grid>
 
                             <Button Grid.Column="2"
-                                    Content="X"
+                                    Content="×"
                                     Click="SearchClearButton_Click">
                                 <Button.Style>
                                     <Style TargetType="Button" BasedOn="{StaticResource SearchClearButtonStyle}">
@@ -259,6 +271,10 @@
                                 Content="Filter"
                                 Style="{StaticResource FilterHeaderButtonStyle}"
                                 Click="FilterButton_Click" />
+                        <Button Margin="0,0,3,0"
+                                Content="Copy"
+                                Style="{StaticResource HeaderActionButtonStyle}"
+                                Click="CopyButton_Click" />
                         <Button Content="Clear View"
                                 Style="{StaticResource DangerHeaderButtonStyle}"
                                 Click="ClearButton_Click" />

@@ -84,6 +84,13 @@ namespace Logger.Wpf.Controls
                 typeof(LogPanelControl),
                 new PropertyMetadata(string.Empty, OnSearchTextChanged));
 
+        public static readonly DependencyProperty SearchBoxVisibleProperty =
+            DependencyProperty.Register(
+                nameof(SearchBoxVisible),
+                typeof(bool),
+                typeof(LogPanelControl),
+                new PropertyMetadata(false, OnSearchBoxVisibleChanged));
+
         public string Header
         {
             get { return (string)GetValue(HeaderProperty); }
@@ -112,6 +119,12 @@ namespace Logger.Wpf.Controls
         {
             get { return (string)GetValue(SearchTextProperty); }
             set { SetValue(SearchTextProperty, value); }
+        }
+
+        public bool SearchBoxVisible
+        {
+            get { return (bool)GetValue(SearchBoxVisibleProperty); }
+            set { SetValue(SearchBoxVisibleProperty, value); }
         }
 
         public LogStore LogStore
@@ -168,6 +181,17 @@ namespace Logger.Wpf.Controls
         {
             _clearAnchorEntry = GetLatestSourceEntry();
             RefreshVisibleEntries();
+        }
+
+        public void CopyLogs()
+        {
+            string copyText = BuildCopyText();
+            if (string.IsNullOrEmpty(copyText))
+            {
+                return;
+            }
+
+            Clipboard.SetText(copyText);
         }
 
         public bool IsLevelVisible(LogLevel level)
@@ -236,6 +260,26 @@ namespace Logger.Wpf.Controls
             }
 
             control.ScheduleRefreshFromLogger();
+        }
+
+        private static void OnSearchBoxVisibleChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs e)
+        {
+            LogPanelControl control = dependencyObject as LogPanelControl;
+            if (control == null)
+            {
+                return;
+            }
+
+            if (!(bool)e.NewValue || control.SearchTextBox == null)
+            {
+                return;
+            }
+
+            control.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                control.SearchTextBox.Focus();
+                control.SearchTextBox.SelectAll();
+            }), DispatcherPriority.Input);
         }
 
         private void AttachLogger(ILoggerOutput oldLogger, ILoggerOutput newLogger)
@@ -440,6 +484,11 @@ namespace Logger.Wpf.Controls
             SearchTextBox.Focus();
         }
 
+        private void CopyButton_Click(object sender, RoutedEventArgs e)
+        {
+            CopyLogs();
+        }
+
         private void FilterButton_Click(object sender, RoutedEventArgs e)
         {
             if (_filterMenu == null)
@@ -600,6 +649,25 @@ namespace Logger.Wpf.Controls
             return isFilterActive || (_filterMenu != null && _filterMenu.IsOpen);
         }
 
+        private string BuildCopyText()
+        {
+            if (_visibleEntries == null || _visibleEntries.Count == 0)
+            {
+                return string.Empty;
+            }
+
+            List<string> lines = new List<string>(_visibleEntries.Count);
+            foreach (LogEntry entry in _visibleEntries)
+            {
+                if (entry != null)
+                {
+                    lines.Add(FormatEntryText(entry));
+                }
+            }
+
+            return string.Join(Environment.NewLine, lines);
+        }
+
         private void FilterMenu_Opened(object sender, RoutedEventArgs e)
         {
             UpdateFilterUi();
@@ -631,6 +699,20 @@ namespace Logger.Wpf.Controls
                 default:
                     return level.ToString().ToUpperInvariant();
             }
+        }
+
+        private static string FormatEntryText(LogEntry entry)
+        {
+            if (entry == null)
+            {
+                return string.Empty;
+            }
+
+            return string.Format(
+                "{0:yyyy-MM-dd HH:mm:ss.fff} [{1}] {2}",
+                entry.Timestamp,
+                entry.LevelText,
+                entry.Message ?? string.Empty);
         }
 
         private static string NormalizeSearchText(string searchText)
