@@ -14,6 +14,7 @@ namespace Logger.WinForms.Controls
     public class LogPanelControl : UserControl
     {
         private const int SearchRefreshDelayMilliseconds = 180;
+        private const int HighThroughputRefreshCoalesceMilliseconds = 8;
         private const LogLevelFilter DefaultLevelFilter =
             LogLevelFilter.Info |
             LogLevelFilter.Success |
@@ -42,6 +43,7 @@ namespace Logger.WinForms.Controls
         private readonly System.Windows.Forms.Timer _searchRefreshTimer;
         private readonly LogGridView _logGrid;
         private readonly Font _levelFont;
+        private readonly DataGridViewTextBoxColumn _messageColumn;
         private bool _refreshPending;
         private int _refreshWorkerRunning;
         private int _refreshVersion;
@@ -51,6 +53,7 @@ namespace Logger.WinForms.Controls
         private string _header = "\u8fd0\u884c\u65e5\u5fd7";
         private string _searchText = string.Empty;
         private bool _autoScrollToEnd = true;
+        private bool _highThroughputMode = true;
         private int _maxLogEntries = 500;
         private LogLevelFilter _levelFilter = DefaultLevelFilter;
         private ILoggerOutput _currentLogger;
@@ -131,6 +134,7 @@ namespace Logger.WinForms.Controls
             };
 
             _logGrid = BuildLogGrid();
+            _messageColumn = _logGrid.Columns[2] as DataGridViewTextBoxColumn;
             _levelFont = new Font("Consolas", 9F, FontStyle.Bold, GraphicsUnit.Point);
             _logGrid.CellFormatting += LogGrid_CellFormatting;
             _logGrid.CellValueNeeded += LogGrid_CellValueNeeded;
@@ -147,6 +151,7 @@ namespace Logger.WinForms.Controls
             Header = _header;
             UpdateFilterUi();
             UpdateSearchUi();
+            ApplyGridRenderMode();
             AttachLogger(new LogStore());
         }
 
@@ -190,6 +195,27 @@ namespace Logger.WinForms.Controls
         {
             get { return _autoScrollToEnd; }
             set { _autoScrollToEnd = value; }
+        }
+
+        [Category("Behavior")]
+        [DefaultValue(true)]
+        public bool HighThroughputMode
+        {
+            get { return _highThroughputMode; }
+            set
+            {
+                ExecuteOnUiThread(() =>
+                {
+                    if (_highThroughputMode == value)
+                    {
+                        return;
+                    }
+
+                    _highThroughputMode = value;
+                    ApplyGridRenderMode();
+                    ScheduleRefresh();
+                });
+            }
         }
 
         [Category("Behavior")]
@@ -553,7 +579,9 @@ namespace Logger.WinForms.Controls
                 e.CellStyle.ForeColor = Color.FromArgb(249, 250, 251);
                 e.CellStyle.SelectionForeColor = e.CellStyle.ForeColor;
                 e.CellStyle.Font = _logGrid.DefaultCellStyle.Font;
-                e.CellStyle.WrapMode = DataGridViewTriState.True;
+                e.CellStyle.WrapMode = _highThroughputMode
+                    ? DataGridViewTriState.False
+                    : DataGridViewTriState.True;
                 e.CellStyle.Alignment = DataGridViewContentAlignment.TopLeft;
             }
         }
@@ -613,7 +641,7 @@ namespace Logger.WinForms.Controls
         {
             while (!IsDisposed && !Disposing)
             {
-                int requestedVersion = Volatile.Read(ref _refreshVersion);
+                int requestedVersion = WaitForRefreshCoalescing(Volatile.Read(ref _refreshVersion));
                 IList<LogEntry> visibleEntries = SnapshotCurrentEntries();
                 int latestVersion = Volatile.Read(ref _refreshVersion);
 
@@ -669,7 +697,6 @@ namespace Logger.WinForms.Controls
             _visibleEntries = visibleEntries ?? Array.Empty<LogEntry>();
             _logGrid.RowCount = _visibleEntries.Count;
             _logGrid.Invalidate();
-            _logGrid.ClearSelection();
 
             if (AutoScrollToEnd)
             {
@@ -1087,7 +1114,64 @@ namespace Logger.WinForms.Controls
             return snapshot;
         }
 
-        private static string NormalizeDisplayMessage(string message)
+        private void ApplyGridRenderMode()
+        {
+            if (_logGrid == null)
+            {
+                return;
+            }
+
+            if (_highThroughputMode)
+            {
+                _logGrid.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.None;
+                _logGrid.RowTemplate.Height = 22;
+                _logGrid.DefaultCellStyle.WrapMode = DataGridViewTriState.False;
+                _logGrid.RowsDefaultCellStyle.WrapMode = DataGridViewTriState.False;
+            }
+            else
+            {
+                _logGrid.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.DisplayedCellsExceptHeaders;
+                _logGrid.RowTemplate.Height = 24;
+                _logGrid.DefaultCellStyle.WrapMode = DataGridViewTriState.False;
+                _logGrid.RowsDefaultCellStyle.WrapMode = DataGridViewTriState.False;
+            }
+
+            if (_messageColumn != null)
+            {
+                _messageColumn.DefaultCellStyle = new DataGridViewCellStyle(_logGrid.DefaultCellStyle)
+                {
+                    WrapMode = _highThroughputMode
+                        ? DataGridViewTriState.False
+                        : DataGridViewTriState.True,
+                    Alignment = DataGridViewContentAlignment.TopLeft
+                };
+            }
+        }
+
+        private int WaitForRefreshCoalescing(int requestedVersion)
+        {
+            if (!_highThroughputMode)
+            {
+                return requestedVersion;
+            }
+
+            int stableVersion = requestedVersion;
+            while (!IsDisposed && !Disposing)
+            {
+                Thread.Sleep(HighThroughputRefreshCoalesceMilliseconds);
+                int latestVersion = Volatile.Read(ref _refreshVersion);
+                if (latestVersion == stableVersion)
+                {
+                    return stableVersion;
+                }
+
+                stableVersion = latestVersion;
+            }
+
+            return stableVersion;
+        }
+
+        private string NormalizeDisplayMessage(string message)
         {
             if (string.IsNullOrEmpty(message))
             {
@@ -1095,7 +1179,9 @@ namespace Logger.WinForms.Controls
             }
 
             string normalized = message.Replace("\r\n", "\n").Replace('\r', '\n');
-            normalized = normalized.Replace("\n", Environment.NewLine);
+            normalized = _highThroughputMode
+                ? normalized.Replace("\n", " | ")
+                : normalized.Replace("\n", Environment.NewLine);
             normalized = normalized.Replace("\t", "    ");
             return normalized;
         }

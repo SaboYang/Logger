@@ -1,19 +1,22 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Text;
 using Logger.Core.Models;
 
 namespace Logger.Core
 {
-    public sealed class TextFileLogStorageBackend : ILogStorageBackend, ILogFileSource
+    public sealed class TextFileLogStorageBackend : ILogStorageBackend, ILogFileSource, IDisposable
     {
+        private const int StreamBufferSize = 64 * 1024;
         private static readonly UTF8Encoding FileEncoding = new UTF8Encoding(false);
 
         private readonly object _syncRoot = new object();
         private readonly FileLogPathProvider _pathProvider;
         private readonly HashSet<string> _headerWrittenPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, WriterState> _writerStates =
+            new Dictionary<string, WriterState>(StringComparer.OrdinalIgnoreCase);
+        private bool _disposed;
 
         public TextFileLogStorageBackend(string logFilePath)
             : this(FileLogPathProvider.CreateFixed(logFilePath))
@@ -43,38 +46,46 @@ namespace Logger.Core
             }
 
             Dictionary<string, List<LogEntry>> entryGroups = GroupEntriesByFilePath(entries);
-            foreach (KeyValuePair<string, List<LogEntry>> entryGroup in entryGroups)
+            if (entryGroups.Count == 0)
             {
-                string logFilePath = entryGroup.Key;
-                string directoryPath = Path.GetDirectoryName(logFilePath);
-                if (string.IsNullOrEmpty(directoryPath))
+                return;
+            }
+
+            lock (_syncRoot)
+            {
+                ThrowIfDisposed();
+
+                foreach (KeyValuePair<string, List<LogEntry>> entryGroup in entryGroups)
                 {
-                    continue;
-                }
-
-                Directory.CreateDirectory(directoryPath);
-
-                lock (_syncRoot)
-                {
-                    bool shouldWriteHeader = !_headerWrittenPaths.Contains(logFilePath)
-                        && (!File.Exists(logFilePath) || new FileInfo(logFilePath).Length == 0);
-
-                    using (FileStream stream = new FileStream(logFilePath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
-                    using (StreamWriter writer = new StreamWriter(stream, FileEncoding))
+                    WriterState writerState = GetOrCreateWriterState(entryGroup.Key, context);
+                    if (writerState == null)
                     {
-                        if (shouldWriteHeader)
-                        {
-                            WriteHeader(writer, context);
-                        }
-
-                        _headerWrittenPaths.Add(logFilePath);
-
-                        foreach (LogEntry entry in entryGroup.Value)
-                        {
-                            writer.WriteLine(FormatEntry(entry));
-                        }
+                        continue;
                     }
+
+                    WriteEntries(writerState, entryGroup.Value);
                 }
+            }
+        }
+
+        public void Dispose()
+        {
+            lock (_syncRoot)
+            {
+                if (_disposed)
+                {
+                    return;
+                }
+
+                _disposed = true;
+
+                foreach (WriterState writerState in _writerStates.Values)
+                {
+                    writerState.Dispose();
+                }
+
+                _writerStates.Clear();
+                _headerWrittenPaths.Clear();
             }
         }
 
@@ -105,7 +116,77 @@ namespace Logger.Core
             return groups;
         }
 
-        private static void WriteHeader(StreamWriter writer, LogStorageContext context)
+        private WriterState GetOrCreateWriterState(string logFilePath, LogStorageContext context)
+        {
+            if (string.IsNullOrWhiteSpace(logFilePath))
+            {
+                return null;
+            }
+
+            WriterState writerState;
+            if (_writerStates.TryGetValue(logFilePath, out writerState))
+            {
+                return writerState;
+            }
+
+            string directoryPath = Path.GetDirectoryName(logFilePath);
+            if (string.IsNullOrEmpty(directoryPath))
+            {
+                return null;
+            }
+
+            Directory.CreateDirectory(directoryPath);
+
+            bool shouldWriteHeader = !_headerWrittenPaths.Contains(logFilePath)
+                && (!File.Exists(logFilePath) || new FileInfo(logFilePath).Length == 0);
+
+            FileStream stream = new FileStream(
+                logFilePath,
+                FileMode.Append,
+                FileAccess.Write,
+                FileShare.ReadWrite,
+                StreamBufferSize,
+                FileOptions.SequentialScan);
+            StreamWriter writer = new StreamWriter(stream, FileEncoding, StreamBufferSize)
+            {
+                NewLine = Environment.NewLine
+            };
+            writerState = new WriterState(writer, stream);
+            _writerStates[logFilePath] = writerState;
+
+            if (shouldWriteHeader)
+            {
+                WriteHeader(writer, context);
+                writer.Flush();
+            }
+
+            _headerWrittenPaths.Add(logFilePath);
+            return writerState;
+        }
+
+        private static void WriteEntries(WriterState writerState, IReadOnlyList<LogEntry> entries)
+        {
+            if (writerState == null || entries == null || entries.Count == 0)
+            {
+                return;
+            }
+
+            StringBuilder builder = new StringBuilder(entries.Count * 96);
+            for (int index = 0; index < entries.Count; index++)
+            {
+                AppendEntry(builder, entries[index]);
+            }
+
+            if (builder.Length == 0)
+            {
+                return;
+            }
+
+            writerState.Writer.Write(builder.ToString());
+            writerState.Writer.Flush();
+        }
+
+        private static void WriteHeader(TextWriter writer, LogStorageContext context)
         {
             if (context == null)
             {
@@ -119,17 +200,45 @@ namespace Logger.Core
             writer.WriteLine("================================");
         }
 
-        private static string FormatEntry(LogEntry entry)
+        private static void AppendEntry(StringBuilder builder, LogEntry entry)
         {
             string message = entry?.Message ?? string.Empty;
             message = message.Replace("\r\n", "\n").Replace('\r', '\n');
             message = message.Replace("\n", Environment.NewLine + "    ");
 
-            return string.Format(
-                "{0:yyyy-MM-dd HH:mm:ss.fff} [{1}] {2}",
-                entry != null ? entry.Timestamp : DateTime.Now,
-                entry != null ? entry.LevelText : "INFO",
-                message);
+            builder.Append((entry != null ? entry.Timestamp : DateTime.Now).ToString("yyyy-MM-dd HH:mm:ss.fff"));
+            builder.Append(" [");
+            builder.Append(entry != null ? entry.LevelText : "INFO");
+            builder.Append("] ");
+            builder.Append(message);
+            builder.AppendLine();
+        }
+
+        private void ThrowIfDisposed()
+        {
+            if (_disposed)
+            {
+                throw new ObjectDisposedException(GetType().FullName);
+            }
+        }
+
+        private sealed class WriterState : IDisposable
+        {
+            public WriterState(StreamWriter writer, FileStream stream)
+            {
+                Writer = writer;
+                Stream = stream;
+            }
+
+            public StreamWriter Writer { get; }
+
+            public FileStream Stream { get; }
+
+            public void Dispose()
+            {
+                Writer.Dispose();
+                Stream.Dispose();
+            }
         }
     }
 }
