@@ -6,12 +6,13 @@ using Logger.Core.Models;
 
 namespace Logger.Core
 {
-    public sealed class MergedLogger : ILoggerOutput, ILogViewSource, ILogLevelThreshold, IDisposable
+    public sealed class MergedLogger : ILoggerOutput, ILogViewSource, ILogLevelThreshold, ILogRuntimeMetricsSource, IDisposable
     {
         private readonly BulkObservableCollection<LogEntry> _entries = new BulkObservableCollection<LogEntry>();
         private readonly object _syncRoot = new object();
         private readonly ILoggerOutput[] _targets;
         private readonly ILogViewSource[] _viewSources;
+        private readonly ViewSourceSubscription[] _subscriptions;
         private int _maxEntries = 500;
         private LogLevel _minimumLevel = LogLevel.Trace;
         private bool _disposed;
@@ -25,13 +26,14 @@ namespace Logger.Core
         {
             _targets = NormalizeLoggers(loggers);
             _viewSources = ExtractViewSources(_targets);
-
-            for (int index = 0; index < _viewSources.Length; index++)
-            {
-                _viewSources[index].Entries.CollectionChanged += ViewEntries_CollectionChanged;
-            }
+            _subscriptions = CreateSubscriptions(_viewSources, this);
 
             RebuildEntries();
+        }
+
+        ~MergedLogger()
+        {
+            Dispose(false);
         }
 
         public object SyncRoot
@@ -80,6 +82,16 @@ namespace Logger.Core
                     _minimumLevel = value;
                 }
             }
+        }
+
+        public int BufferedSessionEntryCount
+        {
+            get { return SumRuntimeMetric(metrics => metrics.BufferedSessionEntryCount); }
+        }
+
+        public int DroppedPendingEntryCount
+        {
+            get { return SumRuntimeMetric(metrics => metrics.DroppedPendingEntryCount); }
         }
 
         public void SetMinimumLevel(LogLevel minimumLevel)
@@ -135,11 +147,6 @@ namespace Logger.Core
             }
         }
 
-        public void AddMergedLog(LogLevel level, string message, IEnumerable<LogEntry> entries)
-        {
-            AddLogs(LogEntrySanitizer.CreateMergedEntries(level, message, entries));
-        }
-
         public void AddLogs(IEnumerable<LogEntry> entries)
         {
             List<LogEntry> normalizedEntries = LogEntrySanitizer.NormalizeEntries(entries);
@@ -162,21 +169,27 @@ namespace Logger.Core
 
         public void Dispose()
         {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        private void Dispose(bool disposing)
+        {
             if (_disposed)
             {
                 return;
             }
 
             _disposed = true;
-            for (int index = 0; index < _viewSources.Length; index++)
+            for (int index = 0; index < _subscriptions.Length; index++)
             {
-                _viewSources[index].Entries.CollectionChanged -= ViewEntries_CollectionChanged;
+                _subscriptions[index].Dispose();
             }
-        }
 
-        private void ViewEntries_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            RebuildEntries();
+            lock (_syncRoot)
+            {
+                _entries.ReplaceAll(Array.Empty<LogEntry>());
+            }
         }
 
         private void RebuildEntries()
@@ -304,6 +317,32 @@ namespace Logger.Core
             return false;
         }
 
+        private int SumRuntimeMetric(Func<ILogRuntimeMetricsSource, int> selector)
+        {
+            int sum = 0;
+            for (int index = 0; index < _targets.Length; index++)
+            {
+                ILogRuntimeMetricsSource metrics = _targets[index] as ILogRuntimeMetricsSource;
+                if (metrics != null)
+                {
+                    sum += selector(metrics);
+                }
+            }
+
+            return sum;
+        }
+
+        private static ViewSourceSubscription[] CreateSubscriptions(IList<ILogViewSource> viewSources, MergedLogger owner)
+        {
+            ViewSourceSubscription[] subscriptions = new ViewSourceSubscription[viewSources.Count];
+            for (int index = 0; index < viewSources.Count; index++)
+            {
+                subscriptions[index] = new ViewSourceSubscription(owner, viewSources[index]);
+            }
+
+            return subscriptions;
+        }
+
         private struct MergedEntryEnvelope
         {
             public MergedEntryEnvelope(LogEntry entry, int sourceIndex, int entryIndex)
@@ -318,6 +357,43 @@ namespace Logger.Core
             public int SourceIndex { get; }
 
             public int EntryIndex { get; }
+        }
+
+        private sealed class ViewSourceSubscription : IDisposable
+        {
+            private readonly WeakReference<MergedLogger> _owner;
+            private readonly ILogViewSource _viewSource;
+            private bool _disposed;
+
+            public ViewSourceSubscription(MergedLogger owner, ILogViewSource viewSource)
+            {
+                _owner = new WeakReference<MergedLogger>(owner);
+                _viewSource = viewSource;
+                _viewSource.Entries.CollectionChanged += ViewEntries_CollectionChanged;
+            }
+
+            public void Dispose()
+            {
+                if (_disposed)
+                {
+                    return;
+                }
+
+                _disposed = true;
+                _viewSource.Entries.CollectionChanged -= ViewEntries_CollectionChanged;
+            }
+
+            private void ViewEntries_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+            {
+                MergedLogger owner;
+                if (!_owner.TryGetTarget(out owner) || owner._disposed)
+                {
+                    Dispose();
+                    return;
+                }
+
+                owner.RebuildEntries();
+            }
         }
     }
 }

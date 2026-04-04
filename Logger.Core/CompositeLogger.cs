@@ -6,13 +6,14 @@ using Logger.Core.Models;
 
 namespace Logger.Core
 {
-    internal sealed class CompositeLogger : ILoggerOutput, ILogViewSource, ILogSessionSource, ILogFileSource, ILogLevelThreshold
+    internal sealed class CompositeLogger : ILoggerOutput, ILogViewSource, ILogSessionSource, ILogFileSource, ILogLevelThreshold, ILogRuntimeMetricsSource, IDisposable
     {
         private readonly ILoggerOutput[] _outputs;
         private readonly ILogViewSource _viewSource;
         private readonly ILogSessionSource _sessionSource;
         private readonly ILogFileSource _fileSource;
         private int _minimumLevel = (int)LogLevel.Trace;
+        private int _disposed;
 
         public CompositeLogger(
             ILogViewSource viewSource,
@@ -55,6 +56,16 @@ namespace Logger.Core
         public int SessionEntryCount
         {
             get { return _sessionSource != null ? _sessionSource.SessionEntryCount : 0; }
+        }
+
+        public int BufferedSessionEntryCount
+        {
+            get { return SumRuntimeMetric(metrics => metrics.BufferedSessionEntryCount); }
+        }
+
+        public int DroppedPendingEntryCount
+        {
+            get { return SumRuntimeMetric(metrics => metrics.DroppedPendingEntryCount); }
         }
 
         public bool IsFileOutputEnabled
@@ -118,6 +129,11 @@ namespace Logger.Core
 
         public void AddLog(LogLevel level, string message)
         {
+            if (Volatile.Read(ref _disposed) != 0)
+            {
+                return;
+            }
+
             if (!LogEntryFilter.MeetsMinimumLevel(level, MinimumLevel))
             {
                 return;
@@ -131,6 +147,11 @@ namespace Logger.Core
 
         public void AddLogs(IEnumerable<LogEntry> entries)
         {
+            if (Volatile.Read(ref _disposed) != 0)
+            {
+                return;
+            }
+
             List<LogEntry> entryBatch = SnapshotEntries(entries);
             if (entryBatch.Count == 0)
             {
@@ -156,6 +177,29 @@ namespace Logger.Core
                 : Array.Empty<LogEntry>();
         }
 
+        public void Dispose()
+        {
+            if (Interlocked.Exchange(ref _disposed, 1) != 0)
+            {
+                return;
+            }
+
+            List<IDisposable> disposables = new List<IDisposable>();
+            CollectDisposable(disposables, _viewSource);
+            CollectDisposable(disposables, _sessionSource);
+            CollectDisposable(disposables, _fileSource);
+
+            for (int index = 0; index < _outputs.Length; index++)
+            {
+                CollectDisposable(disposables, _outputs[index]);
+            }
+
+            for (int index = 0; index < disposables.Count; index++)
+            {
+                disposables[index].Dispose();
+            }
+        }
+
         private static List<LogEntry> SnapshotEntries(IEnumerable<LogEntry> entries)
         {
             List<LogEntry> snapshot = new List<LogEntry>();
@@ -173,6 +217,46 @@ namespace Logger.Core
             }
 
             return snapshot;
+        }
+
+        private static void CollectDisposable(IList<IDisposable> disposables, object candidate)
+        {
+            IDisposable disposable = candidate as IDisposable;
+            if (disposable == null || ContainsReference(disposables, disposable))
+            {
+                return;
+            }
+
+            disposables.Add(disposable);
+        }
+
+        private int SumRuntimeMetric(Func<ILogRuntimeMetricsSource, int> selector)
+        {
+            int sum = 0;
+            for (int index = 0; index < _outputs.Length; index++)
+            {
+                ILogRuntimeMetricsSource metrics = _outputs[index] as ILogRuntimeMetricsSource;
+                if (metrics != null)
+                {
+                    sum += selector(metrics);
+                }
+            }
+
+            return sum;
+        }
+
+        private static bool ContainsReference<T>(IList<T> items, T candidate)
+            where T : class
+        {
+            for (int index = 0; index < items.Count; index++)
+            {
+                if (ReferenceEquals(items[index], candidate))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }

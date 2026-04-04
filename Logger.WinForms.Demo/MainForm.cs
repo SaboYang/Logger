@@ -30,6 +30,7 @@ namespace Logger.WinForms.Demo
         private readonly Button _openFactoryDemoButton;
         private readonly Button _openFileDemoButton;
         private readonly Button _openStorageDemoButton;
+        private readonly Button _openMemoryMetricsDemoButton;
         private readonly NumericUpDown _stressCountInput;
         private readonly Label _statusLabel;
         private readonly StressSummaryPanel _summaryPanel;
@@ -65,10 +66,11 @@ namespace Logger.WinForms.Demo
             {
                 Dock = DockStyle.Top,
                 AutoSize = true,
-                ColumnCount = 10,
+                ColumnCount = 11,
                 RowCount = 1,
                 Margin = new Padding(0, 0, 0, 10)
             };
+            toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
@@ -146,6 +148,17 @@ namespace Logger.WinForms.Demo
                 UseVisualStyleBackColor = true
             };
             _openStorageDemoButton.Click += OpenStorageDemoButton_Click;
+
+            _openMemoryMetricsDemoButton = new Button
+            {
+                AutoSize = true,
+                Height = 34,
+                Margin = new Padding(0, 0, 12, 0),
+                Padding = new Padding(12, 0, 12, 0),
+                Text = "打开指标 Demo",
+                UseVisualStyleBackColor = true
+            };
+            _openMemoryMetricsDemoButton.Click += OpenMemoryMetricsDemoButton_Click;
 
             Label countLabel = new Label
             {
@@ -226,9 +239,10 @@ logger.AddError(""line1\r\nline2"");"
             toolbar.Controls.Add(_openFactoryDemoButton, 3, 0);
             toolbar.Controls.Add(_openFileDemoButton, 4, 0);
             toolbar.Controls.Add(_openStorageDemoButton, 5, 0);
-            toolbar.Controls.Add(countLabel, 6, 0);
-            toolbar.Controls.Add(_stressCountInput, 7, 0);
-            toolbar.Controls.Add(_statusLabel, 9, 0);
+            toolbar.Controls.Add(_openMemoryMetricsDemoButton, 6, 0);
+            toolbar.Controls.Add(countLabel, 7, 0);
+            toolbar.Controls.Add(_stressCountInput, 8, 0);
+            toolbar.Controls.Add(_statusLabel, 10, 0);
 
             rootLayout.Controls.Add(toolbar, 0, 0);
             rootLayout.Controls.Add(infoLabel, 0, 1);
@@ -252,6 +266,7 @@ logger.AddError(""line1\r\nline2"");"
             _logger.AddInfo("点击“打开工厂 Demo”可以查看 ILoggerFactory 与 LoggerService 的接口用法演示。");
             _logger.AddInfo("点击“打开文件 Demo”可以同时验证本地文件落盘和文件内容预览。");
             _logger.AddInfo("点击“打开存储 Demo”可以切换文本文件、CSV 和自定义后端，验证可扩展存储。");
+            _logger.AddInfo("点击“打开指标 Demo”可以观察 BufferedSessionEntryCount 和 DroppedPendingEntryCount。");
             _logger.AddInfo("如果要直接跑封装控件压测，可执行：Logger.WinForms.Demo.exe --wpf-host --stress --close-after-stress");
             WriteLevelSamples();
             UpdateStatus("已加载等级示例");
@@ -309,6 +324,14 @@ logger.AddError(""line1\r\nline2"");"
             demoForm.Show(this);
             _logger.AddInfo("已打开可扩展存储 Demo。");
             UpdateStatus("已打开存储 Demo");
+        }
+
+        private void OpenMemoryMetricsDemoButton_Click(object sender, EventArgs e)
+        {
+            MemoryMetricsDemoForm demoForm = new MemoryMetricsDemoForm();
+            demoForm.Show(this);
+            _logger.AddInfo("已打开内存与背压指标 Demo。");
+            UpdateStatus("已打开指标 Demo");
         }
 
         private void WriteLevelSamples()
@@ -406,6 +429,7 @@ logger.AddError(""line1\r\nline2"");"
             _openFactoryDemoButton.Enabled = enabled;
             _openFileDemoButton.Enabled = enabled;
             _openStorageDemoButton.Enabled = enabled;
+            _openMemoryMetricsDemoButton.Enabled = enabled;
             _stressCountInput.Enabled = enabled;
         }
 

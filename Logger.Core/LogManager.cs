@@ -43,6 +43,18 @@ namespace Logger.Core
             return new MergedLogger(loggers);
         }
 
+        public static bool ReleaseLogger(string name)
+        {
+            LoggerService loggerService = Service as LoggerService;
+            return loggerService != null && loggerService.ReleaseLogger(name);
+        }
+
+        public static int TrimReleasedLoggers()
+        {
+            LoggerService loggerService = Service as LoggerService;
+            return loggerService != null ? loggerService.TrimReleasedLoggers() : 0;
+        }
+
         public static void Configure(ILoggerService service)
         {
             if (service == null)

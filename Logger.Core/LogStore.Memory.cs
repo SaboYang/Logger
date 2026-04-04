@@ -5,12 +5,13 @@ using Logger.Core.Models;
 
 namespace Logger.Core
 {
-    public class LogStore : ILoggerOutput, ILogViewSource, ILogLevelThreshold
+    public class LogStore : ILoggerOutput, ILogViewSource, ILogLevelThreshold, IDisposable
     {
         private readonly BulkObservableCollection<LogEntry> _entries = new BulkObservableCollection<LogEntry>();
         private readonly object _syncRoot = new object();
         private int _maxEntries = 500;
         private LogLevel _minimumLevel = LogLevel.Trace;
+        private bool _disposed;
 
         public object SyncRoot
         {
@@ -103,6 +104,11 @@ namespace Logger.Core
 
             lock (_syncRoot)
             {
+                if (_disposed)
+                {
+                    return;
+                }
+
                 if (!LogEntryFilter.MeetsMinimumLevel(level, _minimumLevel))
                 {
                     return;
@@ -123,6 +129,11 @@ namespace Logger.Core
 
             lock (_syncRoot)
             {
+                if (_disposed)
+                {
+                    return;
+                }
+
                 List<LogEntry> filteredEntries = LogEntryFilter.FilterEntries(normalizedEntries, _minimumLevel);
                 if (filteredEntries.Count == 0)
                 {
@@ -131,6 +142,20 @@ namespace Logger.Core
 
                 _entries.AddRange(filteredEntries);
                 TrimEntries();
+            }
+        }
+
+        public void Dispose()
+        {
+            lock (_syncRoot)
+            {
+                if (_disposed)
+                {
+                    return;
+                }
+
+                _disposed = true;
+                _entries.ReplaceAll(Array.Empty<LogEntry>());
             }
         }
 

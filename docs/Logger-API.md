@@ -415,7 +415,9 @@ using Logger.Core.Models;
 
 ILoggerFactory factory = new LogStoreLoggerFactory(
     logRootDirectoryPath: null,
-    minimumLevel: LogLevel.Warn);
+    minimumLevel: LogLevel.Warn,
+    maxBufferedSessionEntries: 5000,
+    maxPendingStorageEntries: 5000);
 
 ILoggerService service = new LoggerService(factory);
 LogManager.Configure(service);
@@ -429,6 +431,8 @@ logger.AddError("这条会写入 logger");
 
 - 这里的 `minimumLevel` 配置的是 factory 创建出来的 logger 入口等级
 - 不是给存储后端单独再加一层过滤
+- `maxBufferedSessionEntries` 用来限制 `ILogSessionSource` 在内存中保留的会话快照大小
+- `maxPendingStorageEntries` 用来限制后台存储队列的内存占用，队列打满时会对写入端施加背压，不默认丢日志
 
 ### 9.3 自定义全局服务
 
@@ -499,7 +503,9 @@ using Logger.Core.Models;
 
 var factory = new LogStoreLoggerFactory(
     new DbLogStorageBackendFactory("Data Source=.;Initial Catalog=LoggerDb;Integrated Security=True"),
-    minimumLevel: LogLevel.Trace);
+    minimumLevel: LogLevel.Trace,
+    maxBufferedSessionEntries: 5000,
+    maxPendingStorageEntries: 5000);
 
 LogManager.Configure(new LoggerService(factory));
 
@@ -534,7 +540,9 @@ var factory = new LogStoreLoggerFactory(
     new CsvFileLogStorageBackendFactory(
         @"D:\Logs",
         LogFileRollingMode.Week),
-    minimumLevel: LogLevel.Trace);
+    minimumLevel: LogLevel.Trace,
+    maxBufferedSessionEntries: 5000,
+    maxPendingStorageEntries: 5000);
 
 LogManager.Configure(new LoggerService(factory));
 
@@ -551,7 +559,9 @@ using Logger.Core.Models;
 var factory = new LogStoreLoggerFactory(
     logRootDirectoryPath: @"D:\Logs",
     minimumLevel: LogLevel.Trace,
-    rollingMode: LogFileRollingMode.Month);
+    rollingMode: LogFileRollingMode.Month,
+    maxBufferedSessionEntries: 5000,
+    maxPendingStorageEntries: 5000);
 
 LogManager.Configure(new LoggerService(factory));
 
