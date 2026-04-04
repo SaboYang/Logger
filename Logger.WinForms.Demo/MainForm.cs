@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -219,9 +219,9 @@ var logPanel = new LogPanelControl
 
 Controls.Add(logPanel);
 
-logger.AddInfo(""应用启动"");
-logger.AddSuccess(""日志控件已绑定"");
-logger.AddError(""line1\r\nline2"");"
+logger.Info(""应用启动"");
+logger.Success(""日志控件已绑定"");
+logger.Error(""line1\r\nline2"");"
             };
 
             _logPanel = new LogPanelControl
@@ -257,17 +257,17 @@ logger.AddError(""line1\r\nline2"");"
 
         private void MainForm_Shown(object sender, EventArgs e)
         {
-            _logger.AddInfo("WinForms 示例程序已启动。");
-            _logger.AddInfo("当前主窗体使用独立的 ILoggerOutput，不再与其他 Demo 窗口共享日志。");
-            _logger.AddInfo("这个窗体不会调用日志控件的方法，而是直接向 ILoggerOutput 写入。");
+            _logger.Info("WinForms 示例程序已启动。");
+            _logger.Info("当前主窗体使用独立的 ILoggerOutput，不再与其他 Demo 窗口共享日志。");
+            _logger.Info("这个窗体不会调用日志控件的方法，而是直接向 ILoggerOutput 写入。");
             WriteLogFilePath();
-            _logger.AddInfo("点击“写入等级示例”查看全部日志等级，点击“日志压力测试”执行批量写入。");
-            _logger.AddInfo("点击“打开 WPF 宿主”可以在 WinForms 窗体中展示封装后的 WPF 日志控件。");
-            _logger.AddInfo("点击“打开工厂 Demo”可以查看 ILoggerFactory 与 LoggerService 的接口用法演示。");
-            _logger.AddInfo("点击“打开文件 Demo”可以同时验证本地文件落盘和文件内容预览。");
-            _logger.AddInfo("点击“打开存储 Demo”可以切换文本文件、CSV 和自定义后端，验证可扩展存储。");
-            _logger.AddInfo("点击“打开指标 Demo”可以观察 BufferedSessionEntryCount 和 DroppedPendingEntryCount。");
-            _logger.AddInfo("如果要直接跑封装控件压测，可执行：Logger.WinForms.Demo.exe --wpf-host --stress --close-after-stress");
+            _logger.Info("点击“写入等级示例”查看全部日志等级，点击“日志压力测试”执行批量写入。");
+            _logger.Info("点击“打开 WPF 宿主”可以在 WinForms 窗体中展示封装后的 WPF 日志控件。");
+            _logger.Info("点击“打开工厂 Demo”可以查看 ILoggerFactory 与 LoggerService 的接口用法演示。");
+            _logger.Info("点击“打开文件 Demo”可以同时验证本地文件落盘和文件内容预览。");
+            _logger.Info("点击“打开存储 Demo”可以切换文本文件、CSV 和自定义后端，验证可扩展存储。");
+            _logger.Info("点击“打开指标 Demo”可以观察 BufferedSessionEntryCount 和 DroppedPendingEntryCount。");
+            _logger.Info("如果要直接跑封装控件压测，可执行：Logger.WinForms.Demo.exe --wpf-host --stress --close-after-stress");
             WriteLevelSamples();
             UpdateStatus("已加载等级示例");
         }
@@ -280,7 +280,7 @@ logger.AddError(""line1\r\nline2"");"
                 return;
             }
 
-            _logger.AddInfo("本地日志文件: " + fileSource.LogFilePath);
+            _logger.Info("本地日志文件: " + fileSource.LogFilePath);
         }
 
         private void SampleButton_Click(object sender, EventArgs e)
@@ -298,7 +298,7 @@ logger.AddError(""line1\r\nline2"");"
         {
             WpfHostForm hostForm = new WpfHostForm();
             hostForm.Show(this);
-            _logger.AddInfo("已打开一个承载封装版 WPF 日志控件的 WinForms 宿主窗体。");
+            _logger.Info("已打开一个承载封装版 WPF 日志控件的 WinForms 宿主窗体。");
             UpdateStatus("已打开 WPF 宿主窗体");
         }
 
@@ -306,7 +306,7 @@ logger.AddError(""line1\r\nline2"");"
         {
             LoggerFactoryIsolatedDemoForm demoForm = new LoggerFactoryIsolatedDemoForm();
             demoForm.Show(this);
-            _logger.AddInfo("已打开独立日志源模式的 ILoggerFactory / LoggerService Demo。");
+            _logger.Info("已打开独立日志源模式的 ILoggerFactory / LoggerService Demo。");
             UpdateStatus("已打开工厂 Demo");
         }
 
@@ -314,7 +314,7 @@ logger.AddError(""line1\r\nline2"");"
         {
             FileLogDemoForm demoForm = new FileLogDemoForm();
             demoForm.Show(this);
-            _logger.AddInfo("已打开本地日志文件 Demo。");
+            _logger.Info("已打开本地日志文件 Demo。");
             UpdateStatus("已打开文件 Demo");
         }
 
@@ -322,7 +322,7 @@ logger.AddError(""line1\r\nline2"");"
         {
             StorageBackendDemoForm demoForm = new StorageBackendDemoForm();
             demoForm.Show(this);
-            _logger.AddInfo("已打开可扩展存储 Demo。");
+            _logger.Info("已打开可扩展存储 Demo。");
             UpdateStatus("已打开存储 Demo");
         }
 
@@ -330,19 +330,19 @@ logger.AddError(""line1\r\nline2"");"
         {
             MemoryMetricsDemoForm demoForm = new MemoryMetricsDemoForm();
             demoForm.Show(this);
-            _logger.AddInfo("已打开内存与背压指标 Demo。");
+            _logger.Info("已打开内存与背压指标 Demo。");
             UpdateStatus("已打开指标 Demo");
         }
 
         private void WriteLevelSamples()
         {
-            _logger.AddTrace("TRACE: 进入示例流程，记录细粒度跟踪信息。");
-            _logger.AddDebug("DEBUG: 当前按钮和状态栏均已完成初始化。");
-            _logger.AddInfo("INFO: WinForms 日志控件正在正常工作。");
-            _logger.AddSuccess("SUCCESS: 日志控件已成功接入示例程序。");
-            _logger.AddWarning("WARN: 压力测试条数过大时，界面刷新会更频繁。");
-            _logger.AddError("ERROR: 这是演示错误日志，不代表真实故障。");
-            _logger.AddFatal("FATAL: 这是演示致命日志，用于观察高亮效果。\r\nFATAL: 这是演示致命日志，用于观察高亮效果。\r\nFATAL: 这是演示致命日志，用于观察高亮效果。");
+            _logger.Trace("TRACE: 进入示例流程，记录细粒度跟踪信息。");
+            _logger.Debug("DEBUG: 当前按钮和状态栏均已完成初始化。");
+            _logger.Info("INFO: WinForms 日志控件正在正常工作。");
+            _logger.Success("SUCCESS: 日志控件已成功接入示例程序。");
+            _logger.Warning("WARN: 压力测试条数过大时，界面刷新会更频繁。");
+            _logger.Error("ERROR: 这是演示错误日志，不代表真实故障。");
+            _logger.Fatal("FATAL: 这是演示致命日志，用于观察高亮效果。\r\nFATAL: 这是演示致命日志，用于观察高亮效果。\r\nFATAL: 这是演示致命日志，用于观察高亮效果。");
         }
 
         private async Task RunStressTestAsync()
@@ -365,11 +365,11 @@ logger.AddError(""line1\r\nline2"");"
                         "WinForms 日志控件压测",
                         total,
                         string.Format("正在写入 {0:N0} 条日志，请稍候。", total)));
-                _logger.AddInfo(string.Format("开始压力测试，本次计划写入 {0:N0} 条日志。", total));
+                _logger.Info(string.Format("开始压力测试，本次计划写入 {0:N0} 条日志。", total));
                 await Task.Run(() => ProduceStressLogs(total));
 
                 stopwatch.Stop();
-                _logger.AddSuccess(string.Format("压力测试完成，共写入 {0:N0} 条日志，耗时 {1} ms。", total, stopwatch.ElapsedMilliseconds));
+                _logger.Success(string.Format("压力测试完成，共写入 {0:N0} 条日志，耗时 {1} ms。", total, stopwatch.ElapsedMilliseconds));
                 _summaryPanel.UpdateSummary(
                     StressTestSummary.CreateSuccess(
                         "WinForms 日志控件压测",
@@ -381,7 +381,7 @@ logger.AddError(""line1\r\nline2"");"
             catch (Exception ex)
             {
                 stopwatch.Stop();
-                _logger.AddError("压力测试失败：" + ex.Message);
+                _logger.Error("压力测试失败：" + ex.Message);
                 _summaryPanel.UpdateSummary(
                     StressTestSummary.CreateFailure(
                         "WinForms 日志控件压测",

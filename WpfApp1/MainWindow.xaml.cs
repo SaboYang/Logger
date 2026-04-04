@@ -1,4 +1,4 @@
-﻿using Microsoft.Win32;
+using Microsoft.Win32;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -32,11 +32,11 @@ namespace WpfApp1
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             SetStatus("准备就绪");
-            _logger.AddSuccess("日志控件已就绪。");
-            _logger.AddInfo("当前支持等级：TRACE / DEBUG / INFO / SUCCESS / WARN / ERROR / FATAL。");
-            _logger.AddInfo("当前窗口通过 Logger.Core 接口向 WPF 日志控件输出内容。");
+            _logger.Success("日志控件已就绪。");
+            _logger.Info("当前支持等级：TRACE / DEBUG / INFO / SUCCESS / WARN / ERROR / FATAL。");
+            _logger.Info("当前窗口通过 Logger.Core 接口向 WPF 日志控件输出内容。");
             WriteLogFilePath();
-            _logger.AddInfo("点击“日志压力测试”可批量写入日志。");
+            _logger.Info("点击“日志压力测试”可批量写入日志。");
         }
 
         private void WriteLogFilePath()
@@ -47,14 +47,14 @@ namespace WpfApp1
                 return;
             }
 
-            _logger.AddInfo("本地日志文件: " + fileSource.LogFilePath);
+            _logger.Info("本地日志文件: " + fileSource.LogFilePath);
         }
 
         private async void BtnStressTest_Click(object sender, RoutedEventArgs e)
         {
             if (_isStressRunning)
             {
-                _logger.AddWarning("压力测试正在进行中，请稍候。");
+                _logger.Warning("压力测试正在进行中，请稍候。");
                 return;
             }
 
@@ -65,14 +65,14 @@ namespace WpfApp1
             try
             {
                 var st = Stopwatch.StartNew();
-                _logger.AddInfo($"开始压力测试，本次准备写入 {StressLogCount} 条日志。");
+                _logger.Info($"开始压力测试，本次准备写入 {StressLogCount} 条日志。");
                 await Task.Run(() => ProduceStressLogs(StressLogCount));
-                _logger.AddSuccess("压力测试完成。");
+                _logger.Success("压力测试完成。");
                 SetStatus($"压力测试完成，共写入 {StressLogCount} 条日志,完成时间：{st.Elapsed}");
             }
             catch (Exception ex)
             {
-                _logger.AddError($"压力测试失败：{ex.Message}");
+                _logger.Error($"压力测试失败：{ex.Message}");
                 SetStatus("压力测试失败");
             }
             finally

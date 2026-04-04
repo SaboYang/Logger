@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -155,9 +155,9 @@ var hostPanel = new WpfLogPanelControl
 
 Controls.Add(hostPanel);
 
-logger.AddInfo(""WPF host ready"");
-logger.AddSuccess(""Logger.Wpf 已封装到 WinForms"");
-logger.AddError(""line1\r\nline2"");"
+logger.Info(""WPF host ready"");
+logger.Success(""Logger.Wpf 已封装到 WinForms"");
+logger.Error(""line1\r\nline2"");"
             };
 
             _wpfLogPanel = new WpfLogPanelControl
@@ -188,11 +188,11 @@ logger.AddError(""line1\r\nline2"");"
 
         private async void WpfHostForm_Shown(object sender, EventArgs e)
         {
-            _logger.AddInfo("WPF 日志控件已经通过 Logger.WinForms 封装成功挂载。");
-            _logger.AddInfo("当前宿主窗体绑定了独立的 ILoggerOutput，默认不会与其他 Demo 窗口共享日志。");
-            _logger.AddInfo("这个窗体不会调用日志控件的方法，而是直接向 ILoggerOutput 写入。");
+            _logger.Info("WPF 日志控件已经通过 Logger.WinForms 封装成功挂载。");
+            _logger.Info("当前宿主窗体绑定了独立的 ILoggerOutput，默认不会与其他 Demo 窗口共享日志。");
+            _logger.Info("这个窗体不会调用日志控件的方法，而是直接向 ILoggerOutput 写入。");
             WriteLogFilePath();
-            _logger.AddInfo("点击“写入 WPF 示例”查看等级显示，点击“WPF 压力测试”执行批量写入。");
+            _logger.Info("点击“写入 WPF 示例”查看等级显示，点击“WPF 压力测试”执行批量写入。");
             WriteLevelSamples();
             UpdateStatus("WPF 宿主窗体已就绪");
 
@@ -215,7 +215,7 @@ logger.AddError(""line1\r\nline2"");"
                 return;
             }
 
-            _logger.AddInfo("本地日志文件: " + fileSource.LogFilePath);
+            _logger.Info("本地日志文件: " + fileSource.LogFilePath);
         }
 
         private void SampleButton_Click(object sender, EventArgs e)
@@ -231,20 +231,20 @@ logger.AddError(""line1\r\nline2"");"
 
         private void WriteLevelSamples()
         {
-            _logger.AddTrace("TRACE: WPF 控件已接入 WinForms 宿主。");
-            _logger.AddDebug("DEBUG: 当前正在验证 WPF 宿主封装路径。");
-            _logger.AddInfo("INFO: WinForms 与 WPF 日志控件可以并存运行。");
-            _logger.AddSuccess("SUCCESS: Logger.Wpf 宿主窗体初始化完成。");
-            _logger.AddWarning("WARN: 压力测试时会使用分批写入，避免界面假死。");
-            _logger.AddError("ERROR: 这是演示错误日志，用于确认颜色和样式。");
-            _logger.AddFatal("FATAL: 这是演示致命日志，用于确认高亮显示。\r\nFATAL: 这是演示致命日志，用于确认高亮显示。\r\nFATAL: 这是演示致命日志，用于确认高亮显示。\r\nFATAL: 这是演示致命日志，用于确认高亮显示。");
+            _logger.Trace("TRACE: WPF 控件已接入 WinForms 宿主。");
+            _logger.Debug("DEBUG: 当前正在验证 WPF 宿主封装路径。");
+            _logger.Info("INFO: WinForms 与 WPF 日志控件可以并存运行。");
+            _logger.Success("SUCCESS: Logger.Wpf 宿主窗体初始化完成。");
+            _logger.Warning("WARN: 压力测试时会使用分批写入，避免界面假死。");
+            _logger.Error("ERROR: 这是演示错误日志，用于确认颜色和样式。");
+            _logger.Fatal("FATAL: 这是演示致命日志，用于确认高亮显示。\r\nFATAL: 这是演示致命日志，用于确认高亮显示。\r\nFATAL: 这是演示致命日志，用于确认高亮显示。\r\nFATAL: 这是演示致命日志，用于确认高亮显示。");
         }
 
         private async Task RunStressTestAsync()
         {
             if (_isStressRunning)
             {
-                _logger.AddWarning("WPF 压力测试正在进行中，请稍候。");
+                _logger.Warning("WPF 压力测试正在进行中，请稍候。");
                 return;
             }
 
@@ -261,11 +261,11 @@ logger.AddError(""line1\r\nline2"");"
                         "WPF 宿主控件压测",
                         _stressLogCount,
                         string.Format("正在写入 {0:N0} 条 WPF 压测日志。", _stressLogCount)));
-                _logger.AddInfo(string.Format("开始 WPF 压力测试，本次计划写入 {0:N0} 条日志。", _stressLogCount));
+                _logger.Info(string.Format("开始 WPF 压力测试，本次计划写入 {0:N0} 条日志。", _stressLogCount));
                 await Task.Run(() => ProduceStressLogs(_stressLogCount));
 
                 stopwatch.Stop();
-                _logger.AddSuccess(string.Format("WPF 压力测试完成，共写入 {0:N0} 条日志，耗时 {1} ms。", _stressLogCount, stopwatch.ElapsedMilliseconds));
+                _logger.Success(string.Format("WPF 压力测试完成，共写入 {0:N0} 条日志，耗时 {1} ms。", _stressLogCount, stopwatch.ElapsedMilliseconds));
                 _summaryPanel.UpdateSummary(
                     StressTestSummary.CreateSuccess(
                         "WPF 宿主控件压测",
@@ -278,7 +278,7 @@ logger.AddError(""line1\r\nline2"");"
             catch (Exception ex)
             {
                 stopwatch.Stop();
-                _logger.AddError("WPF 压力测试失败：" + ex.Message);
+                _logger.Error("WPF 压力测试失败：" + ex.Message);
                 _summaryPanel.UpdateSummary(
                     StressTestSummary.CreateFailure(
                         "WPF 宿主控件压测",

@@ -1,4 +1,4 @@
-﻿# Logger
+# Logger
 
 轻量日志组件，分为三层：
 
@@ -19,7 +19,8 @@
 - 默认 `spool/WAL` 刷新模式是 `Buffered`，优先保证日志吞吐；需要更强本地持久化时可切到 `Durable`
 - 支持文本文件、CSV、自定义存储后端
 - 文件存储支持 `单文件 / 年 / 月 / 周 / 日` 五种滚动方式，默认按日
-- UI 自带搜索、等级过滤、清空视图
+- UI 自带搜索、等级过滤、复制当前显示内容、清空视图
+- 搜索框默认隐藏，通过 `SearchBoxVisible` 属性控制显示
 
 ## 1 分钟上手
 
@@ -30,9 +31,9 @@ using Logger.Core;
 
 ILoggerOutput logger = LogManager.GetLogger("MyApp");
 
-logger.AddInfo("应用启动");
-logger.AddSuccess("初始化完成");
-logger.AddError("连接失败");
+logger.Info("应用启动");
+logger.Success("初始化完成");
+logger.Error("连接失败");
 ```
 
 说明：
@@ -88,9 +89,10 @@ public partial class MainWindow
     {
         InitializeComponent();
         LogViewer.Logger = _logger;
+        LogViewer.SearchBoxVisible = true;
 
-        _logger.AddInfo("WPF 日志控件绑定完成");
-        _logger.AddError("多行示例\r\n第二行");
+        _logger.Info("WPF 日志控件绑定完成");
+        _logger.Error("多行示例\r\n第二行");
     }
 }
 ```
@@ -117,13 +119,14 @@ public partial class MainForm : Form
             Dock = DockStyle.Fill,
             Header = "运行日志",
             MaxLogEntries = 5000,
+            SearchBoxVisible = true,
             Logger = _logger
         };
 
         Controls.Add(logPanel);
 
-        _logger.AddInfo("WinForms 日志控件绑定完成");
-        _logger.AddSuccess("多行示例\r\n第二行\r\n第三行");
+        _logger.Info("WinForms 日志控件绑定完成");
+        _logger.Success("多行示例\r\n第二行\r\n第三行");
     }
 }
 ```
@@ -148,6 +151,7 @@ public partial class MainForm : Form
             Dock = DockStyle.Fill,
             Header = "WPF 日志控件",
             MaxLogEntries = 5000,
+            SearchBoxVisible = true,
             Logger = _logger
         };
 
@@ -155,6 +159,13 @@ public partial class MainForm : Form
     }
 }
 ```
+
+说明：
+
+- `SearchBoxVisible` 默认是 `false`
+- 搜索框是否显示由代码控制，不依赖控件头部按钮
+- `CopyLogs()` 或头部“复制全部”按钮会复制当前控件里全部可见日志
+- 复制内容会遵循当前 `LevelFilter`、`SearchText` 和 `ClearLogs()` 后的视图范围
 
 ## 合并多个 ILoggerOutput
 
@@ -169,7 +180,7 @@ ILoggerOutput deviceLogger = LogManager.GetLogger("Device");
 ILoggerOutput mergedLogger = LogManager.CreateMergedLogger(appLogger, deviceLogger);
 logPanel.Logger = mergedLogger;
 
-mergedLogger.AddInfo("这条日志会同时写入 App 和 Device");
+mergedLogger.Info("这条日志会同时写入 App 和 Device");
 ```
 
 说明：
@@ -227,7 +238,7 @@ var factory = new LogStoreLoggerFactory(
 LogManager.Configure(new LoggerService(factory));
 
 ILoggerOutput logger = LogManager.GetLogger("OrderService");
-logger.AddInfo("订单服务启动");
+logger.Info("订单服务启动");
 ```
 
 说明：
@@ -277,7 +288,7 @@ var factory = new LogStoreLoggerFactory(
 LogManager.Configure(new LoggerService(factory));
 
 ILoggerOutput logger = LogManager.GetLogger("OrderService");
-logger.AddInfo("当前日志会按月写入文件");
+logger.Info("当前日志会按月写入文件");
 ```
 
 CSV 示例：
@@ -306,13 +317,13 @@ LogManager.Configure(new LoggerService(factory));
 ```csharp
 ILoggerOutput logger = LogManager.GetLogger("MyApp");
 logPanel.Logger = logger;
-logger.AddInfo("写业务日志");
+logger.Info("写业务日志");
 ```
 
 不推荐：
 
 ```csharp
-logPanel.AddInfo("写业务日志");
+logPanel.Info("写业务日志");
 ```
 
 原因是前者业务层不依赖 UI，后续更换展示方式或存储方式更容易。

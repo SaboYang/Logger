@@ -22,13 +22,13 @@ classDiagram
 
     class "Logger.Core.ILoggerOutput" as ILoggerOutput {
         <<interface>>
-        +AddTrace(message)
-        +AddDebug(message)
-        +AddInfo(message)
-        +AddSuccess(message)
-        +AddWarning(message)
-        +AddError(message)
-        +AddFatal(message)
+        +Trace(message)
+        +Debug(message)
+        +Info(message)
+        +Success(message)
+        +Warning(message)
+        +Error(message)
+        +Fatal(message)
         +AddLog(level, message)
         +AddLogs(entries)
     }
@@ -79,13 +79,13 @@ classDiagram
         +SyncRoot : object
         +Entries : ObservableCollection~LogEntry~
         +MaxEntries : int
-        +AddTrace(message)
-        +AddDebug(message)
-        +AddInfo(message)
-        +AddSuccess(message)
-        +AddWarning(message)
-        +AddError(message)
-        +AddFatal(message)
+        +Trace(message)
+        +Debug(message)
+        +Info(message)
+        +Success(message)
+        +Warning(message)
+        +Error(message)
+        +Fatal(message)
         +AddLog(level, message)
         +AddLogs(entries)
     }

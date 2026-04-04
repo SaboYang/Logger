@@ -437,19 +437,19 @@ namespace Logger.WinForms.Demo
             }
 
             _sequence = 0;
-            _logger.AddInfo("已创建新的 ILoggerOutput，并绑定到日志控件。");
-            _logger.AddInfo("当前存储后端: " + GetBackendName(backendKind));
-            _logger.AddInfo("业务层只向 ILoggerOutput 写日志，不直接调用控件显示方法。");
+            _logger.Info("已创建新的 ILoggerOutput，并绑定到日志控件。");
+            _logger.Info("当前存储后端: " + GetBackendName(backendKind));
+            _logger.Info("业务层只向 ILoggerOutput 写日志，不直接调用控件显示方法。");
 
             if (_fileSource != null && _fileSource.IsFileOutputEnabled && !string.IsNullOrWhiteSpace(_fileSource.LogFilePath))
             {
-                _logger.AddSuccess("当前后端会把日志异步写入本地文件。");
-                _logger.AddInfo("输出文件: " + _fileSource.LogFilePath);
+                _logger.Success("当前后端会把日志异步写入本地文件。");
+                _logger.Info("输出文件: " + _fileSource.LogFilePath);
             }
             else
             {
-                _logger.AddSuccess("当前后端是自定义实现，右侧表格预览其接收到的批量写入结果。");
-                _logger.AddInfo("把这个自定义后端替换成 SQL Server、SQLite 或其他数据库实现即可接入真实数据库。");
+                _logger.Success("当前后端是自定义实现，右侧表格预览其接收到的批量写入结果。");
+                _logger.Info("把这个自定义后端替换成 SQL Server、SQLite 或其他数据库实现即可接入真实数据库。");
             }
         }
 
@@ -461,13 +461,13 @@ namespace Logger.WinForms.Demo
             }
 
             _sequence++;
-            _logger.AddTrace(string.Format("TRACE: 第 {0} 组示例日志开始。", _sequence));
-            _logger.AddDebug("DEBUG: 当前窗体仍然只依赖 ILoggerOutput 接口。");
-            _logger.AddInfo("INFO: 可以随时切换到 CSV、文本文件或自定义后端。");
-            _logger.AddSuccess("SUCCESS: 存储后端已经解耦，UI 绑定方式没有变化。");
-            _logger.AddWarning("WARN: 如果换成真实数据库，建议在后端内部做批量插入。");
-            _logger.AddError("ERROR: 这是示例错误日志，用于验证多后端写入。");
-            _logger.AddFatal("FATAL: 这是示例致命日志，用于验证颜色和高亮。");
+            _logger.Trace(string.Format("TRACE: 第 {0} 组示例日志开始。", _sequence));
+            _logger.Debug("DEBUG: 当前窗体仍然只依赖 ILoggerOutput 接口。");
+            _logger.Info("INFO: 可以随时切换到 CSV、文本文件或自定义后端。");
+            _logger.Success("SUCCESS: 存储后端已经解耦，UI 绑定方式没有变化。");
+            _logger.Warning("WARN: 如果换成真实数据库，建议在后端内部做批量插入。");
+            _logger.Error("ERROR: 这是示例错误日志，用于验证多后端写入。");
+            _logger.Fatal("FATAL: 这是示例致命日志，用于验证颜色和高亮。");
         }
 
         private void WriteBatchEntries(int count)
@@ -645,8 +645,8 @@ LogManager.Configure(
 ILoggerOutput logger = LogManager.GetLogger(""OrderService"");
 logPanel.Logger = logger;
 
-logger.AddInfo(""CSV logger ready."");
-logger.AddError(""line1\r\nline2"");";
+logger.Info(""CSV logger ready."");
+logger.Error(""line1\r\nline2"");";
 
                 case StorageBackendKind.SimulatedDatabase:
                     return
@@ -661,8 +661,8 @@ ILoggerFactory loggerFactory =
 ILoggerOutput logger = loggerFactory.CreateLogger(""OrderService"");
 logPanel.Logger = logger;
 
-logger.AddInfo(""Database logger ready."");
-logger.AddError(""line1\r\nline2"");
+logger.Info(""Database logger ready."");
+logger.Error(""line1\r\nline2"");
 
 // Demo 中使用的是 DemoTableLogStorageBackendFactory，
 // 真实项目里把它替换成你的数据库后端工厂即可。";
@@ -680,8 +680,8 @@ LogManager.Configure(
 ILoggerOutput logger = LogManager.GetLogger(""OrderService"");
 logPanel.Logger = logger;
 
-logger.AddInfo(""Text logger ready."");
-logger.AddError(""line1\r\nline2"");";
+logger.Info(""Text logger ready."");
+logger.Error(""line1\r\nline2"");";
             }
         }
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows.Forms;
@@ -124,39 +124,39 @@ namespace Logger.WinForms.Controls
             get { return _wpfLogPanel.LogStore; }
         }
 
-        public void AddTrace(string message)
+        public void Trace(string message)
         {
-            ExecuteOnWpfThread(() => _wpfLogPanel.AddTrace(message));
+            ExecuteOnWpfThread(() => _wpfLogPanel.Trace(message));
         }
 
-        public void AddDebug(string message)
+        public void Debug(string message)
         {
-            ExecuteOnWpfThread(() => _wpfLogPanel.AddDebug(message));
+            ExecuteOnWpfThread(() => _wpfLogPanel.Debug(message));
         }
 
-        public void AddInfo(string message)
+        public void Info(string message)
         {
-            ExecuteOnWpfThread(() => _wpfLogPanel.AddInfo(message));
+            ExecuteOnWpfThread(() => _wpfLogPanel.Info(message));
         }
 
-        public void AddSuccess(string message)
+        public void Success(string message)
         {
-            ExecuteOnWpfThread(() => _wpfLogPanel.AddSuccess(message));
+            ExecuteOnWpfThread(() => _wpfLogPanel.Success(message));
         }
 
-        public void AddWarning(string message)
+        public void Warning(string message)
         {
-            ExecuteOnWpfThread(() => _wpfLogPanel.AddWarning(message));
+            ExecuteOnWpfThread(() => _wpfLogPanel.Warning(message));
         }
 
-        public void AddError(string message)
+        public void Error(string message)
         {
-            ExecuteOnWpfThread(() => _wpfLogPanel.AddError(message));
+            ExecuteOnWpfThread(() => _wpfLogPanel.Error(message));
         }
 
-        public void AddFatal(string message)
+        public void Fatal(string message)
         {
-            ExecuteOnWpfThread(() => _wpfLogPanel.AddFatal(message));
+            ExecuteOnWpfThread(() => _wpfLogPanel.Fatal(message));
         }
 
         public void AddLog(LogLevel level, string message)

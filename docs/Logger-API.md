@@ -1,4 +1,4 @@
-﻿# Logger API 调用文档
+# Logger API 调用文档
 
 ## 1. 适用范围
 
@@ -26,13 +26,13 @@ public interface ILoggerOutput
 {
     void SetMinimumLevel(LogLevel minimumLevel);
 
-    void AddTrace(string message);
-    void AddDebug(string message);
-    void AddInfo(string message);
-    void AddSuccess(string message);
-    void AddWarning(string message);
-    void AddError(string message);
-    void AddFatal(string message);
+    void Trace(string message);
+    void Debug(string message);
+    void Info(string message);
+    void Success(string message);
+    void Warning(string message);
+    void Error(string message);
+    void Fatal(string message);
 
     void AddLog(LogLevel level, string message);
     void AddLogs(IEnumerable<LogEntry> entries);
@@ -120,10 +120,10 @@ using Logger.Core;
 
 ILoggerOutput logger = LogManager.GetLogger("MyApp");
 
-logger.AddInfo("应用启动");
-logger.AddSuccess("初始化完成");
-logger.AddWarning("配置文件缺少可选项");
-logger.AddError("连接失败");
+logger.Info("应用启动");
+logger.Success("初始化完成");
+logger.Warning("配置文件缺少可选项");
+logger.Error("连接失败");
 ```
 
 ### 4.2 批量写入
@@ -156,7 +156,7 @@ ILoggerOutput auditLogger = LogManager.GetLogger("Audit");
 ILoggerOutput mergedLogger =
     LogManager.CreateMergedLogger(appLogger, deviceLogger, auditLogger);
 
-mergedLogger.AddInfo("这条日志会同时写入 3 个 logger");
+mergedLogger.Info("这条日志会同时写入 3 个 logger");
 ```
 
 行为说明：
@@ -255,8 +255,8 @@ public partial class MainWindow
         InitializeComponent();
         LogViewer.Logger = _logger;
 
-        _logger.AddInfo("WPF 日志控件绑定完成");
-        _logger.AddError("多行示例\r\n第二行");
+        _logger.Info("WPF 日志控件绑定完成");
+        _logger.Error("多行示例\r\n第二行");
     }
 }
 ```
@@ -268,11 +268,15 @@ public partial class MainWindow
 - `Logger`：绑定的日志接口
 - `LevelFilter`：UI 等级过滤
 - `SearchText`：UI 搜索文本
+- `SearchBoxVisible`：搜索框是否显示，默认 `false`
 
 说明：
 
 - `ClearLogs()` 是 UI 视图清空，不是业务日志入口
-- 业务代码应写 `ILoggerOutput`，而不是调用控件的 `AddInfo/AddError`
+- `CopyLogs()` 会复制当前控件中全部可见日志
+- 复制内容会遵循当前 `LevelFilter`、`SearchText` 和清空视图后的范围
+- 搜索框默认隐藏，是否显示由 `SearchBoxVisible` 控制
+- 业务代码应写 `ILoggerOutput`，而不是调用控件的 `Info/Error`
 - `Logger` 也可以绑定 `LogManager.CreateMergedLogger(...)` 返回的聚合 logger
 
 ---
@@ -306,8 +310,8 @@ public partial class MainForm : Form
 
         Controls.Add(logPanel);
 
-        _logger.AddInfo("WinForms 日志控件绑定完成");
-        _logger.AddSuccess("多行示例\r\n第二行\r\n第三行");
+        _logger.Info("WinForms 日志控件绑定完成");
+        _logger.Success("多行示例\r\n第二行\r\n第三行");
     }
 }
 ```
@@ -339,7 +343,7 @@ public partial class MainForm : Form
 
         Controls.Add(logPanel);
 
-        _logger.AddInfo("WinForms 中的 WPF 日志控件绑定完成");
+        _logger.Info("WinForms 中的 WPF 日志控件绑定完成");
     }
 }
 ```
@@ -351,7 +355,14 @@ public partial class MainForm : Form
 - `Logger`：绑定的日志接口
 - `LevelFilter`：UI 等级过滤
 - `SearchText`：UI 搜索文本
+- `SearchBoxVisible`：搜索框是否显示，默认 `false`
 - `Logger` 也可以绑定 `LogManager.CreateMergedLogger(...)` 返回的聚合 logger
+
+说明：
+
+- `CopyLogs()` 会复制当前控件中全部可见日志
+- 复制内容会遵循当前 `LevelFilter`、`SearchText` 和清空视图后的范围
+- 搜索框默认隐藏，是否显示由 `SearchBoxVisible` 控制
 
 ---
 
@@ -425,8 +436,8 @@ ILoggerService service = new LoggerService(factory);
 LogManager.Configure(service);
 
 ILoggerOutput logger = LogManager.GetLogger("MyApp");
-logger.AddInfo("这条不会写入 logger");
-logger.AddError("这条会写入 logger");
+logger.Info("这条不会写入 logger");
+logger.Error("这条会写入 logger");
 ```
 
 说明：
@@ -517,7 +528,7 @@ var factory = new LogStoreLoggerFactory(
 LogManager.Configure(new LoggerService(factory));
 
 ILoggerOutput logger = LogManager.GetLogger("OrderService");
-logger.AddInfo("订单服务启动");
+logger.Info("订单服务启动");
 ```
 
 ### 10.3 内置后端
@@ -556,7 +567,7 @@ var factory = new LogStoreLoggerFactory(
 LogManager.Configure(new LoggerService(factory));
 
 ILoggerOutput logger = LogManager.GetLogger("CsvDemo");
-logger.AddInfo("当前日志会写入 CSV");
+logger.Info("当前日志会写入 CSV");
 ```
 
 文本文件按月滚动示例：
@@ -577,7 +588,7 @@ var factory = new LogStoreLoggerFactory(
 LogManager.Configure(new LoggerService(factory));
 
 ILoggerOutput logger = LogManager.GetLogger("TextDemo");
-logger.AddInfo("当前日志会按月写入文本文件");
+logger.Info("当前日志会按月写入文本文件");
 ```
 
 ### 10.4 存储后端的职责边界
@@ -610,8 +621,8 @@ public sealed class OrderService
 
     public void Execute()
     {
-        _logger.AddInfo("开始处理订单");
-        _logger.AddSuccess("订单处理完成");
+        _logger.Info("开始处理订单");
+        _logger.Success("订单处理完成");
     }
 }
 ```
@@ -622,7 +633,7 @@ public sealed class OrderService
 ILoggerOutput logger = LogManager.GetLogger("DesktopApp");
 logPanel.Logger = logger;
 
-logger.AddInfo("初始化 UI");
+logger.Info("初始化 UI");
 ```
 
 ### 11.3 排查模式：临时打开 Trace
@@ -631,9 +642,9 @@ logger.AddInfo("初始化 UI");
 ILoggerOutput logger = LogManager.GetLogger("DebugApp");
 logger.SetMinimumLevel(LogLevel.Trace);
 
-logger.AddTrace("进入方法 A");
-logger.AddDebug("读取配置完成");
-logger.AddInfo("执行完成");
+logger.Trace("进入方法 A");
+logger.Debug("读取配置完成");
+logger.Info("执行完成");
 ```
 
 ---
@@ -648,20 +659,20 @@ logger.AddInfo("执行完成");
 
 因为它们绑定的是同一个 logger 实例。只要名字相同，且来自同一个 `ILoggerService`，最低等级配置也是共享的。
 
-### 12.3 为什么不推荐直接调用控件的 `AddInfo`？
+### 12.3 为什么不推荐直接调用控件的 `Info`？
 
 因为那样业务层会直接依赖 UI。推荐写法是：
 
 ```csharp
 ILoggerOutput logger = LogManager.GetLogger("MyApp");
 logPanel.Logger = logger;
-logger.AddInfo("写业务日志");
+logger.Info("写业务日志");
 ```
 
 不推荐：
 
 ```csharp
-logPanel.AddInfo("写业务日志");
+logPanel.Info("写业务日志");
 ```
 
 ### 12.4 存储后端能不能自己再做过滤？

@@ -184,8 +184,8 @@ var logPanel = new LogPanelControl
 
 Controls.Add(logPanel);
 
-logger.AddInfo(""write to ui and file"");
-logger.AddError(""line1\r\nline2"");
+logger.Info(""write to ui and file"");
+logger.Error(""line1\r\nline2"");
 
 ILogFileSource fileSource = logger as ILogFileSource;
 string path = fileSource != null ? fileSource.LogFilePath : null;"
@@ -254,12 +254,12 @@ string path = fileSource != null ? fileSource.LogFilePath : null;"
 
         private void FileLogDemoForm_Shown(object sender, EventArgs e)
         {
-            _logger.AddInfo("文件日志 Demo 已启动。");
-            _logger.AddInfo("当前窗体通过 ILoggerOutput 写日志，同时将本场日志异步写入本地文件。");
+            _logger.Info("文件日志 Demo 已启动。");
+            _logger.Info("当前窗体通过 ILoggerOutput 写日志，同时将本场日志异步写入本地文件。");
             if (_fileSource != null && _fileSource.IsFileOutputEnabled)
             {
-                _logger.AddSuccess("本地文件输出已启用。");
-                _logger.AddInfo("日志文件: " + _fileSource.LogFilePath);
+                _logger.Success("本地文件输出已启用。");
+                _logger.Info("日志文件: " + _fileSource.LogFilePath);
             }
 
             WriteSampleEntries();
@@ -305,12 +305,12 @@ string path = fileSource != null ? fileSource.LogFilePath : null;"
         private void WriteSampleEntries()
         {
             _sequence++;
-            _logger.AddTrace(string.Format("TRACE: 文件日志示例第 {0} 组开始。", _sequence));
-            _logger.AddDebug(string.Format("DEBUG: 当前会话累计写入 {0} 条。", _sessionSource != null ? _sessionSource.SessionEntryCount : 0));
-            _logger.AddInfo("INFO: 这条日志会同时进入 UI 和本地日志文件。");
-            _logger.AddSuccess("SUCCESS: 文件输出链路正常。");
-            _logger.AddWarning("WARN: 预览读取的是当前日志文件落盘后的内容。");
-            _logger.AddError("ERROR: 这是文件日志演示用错误项。");
+            _logger.Trace(string.Format("TRACE: 文件日志示例第 {0} 组开始。", _sequence));
+            _logger.Debug(string.Format("DEBUG: 当前会话累计写入 {0} 条。", _sessionSource != null ? _sessionSource.SessionEntryCount : 0));
+            _logger.Info("INFO: 这条日志会同时进入 UI 和本地日志文件。");
+            _logger.Success("SUCCESS: 文件输出链路正常。");
+            _logger.Warning("WARN: 预览读取的是当前日志文件落盘后的内容。");
+            _logger.Error("ERROR: 这是文件日志演示用错误项。");
         }
 
         private void WriteBatchEntries(int count)

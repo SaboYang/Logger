@@ -104,9 +104,9 @@ ILoggerOutput factoryLogger =
 serviceLogPanel.Logger = serviceLogger;
 factoryLogPanel.Logger = factoryLogger;
 
-serviceLogger.AddInfo(""resolved from LoggerService"");
-serviceLogger.AddError(""line1\r\nline2"");
-factoryLogger.AddDebug(""created by ILoggerFactory"");"
+serviceLogger.Info(""resolved from LoggerService"");
+serviceLogger.Error(""line1\r\nline2"");
+factoryLogger.Debug(""created by ILoggerFactory"");"
             };
 
             TableLayoutPanel panelLayout = new TableLayoutPanel
@@ -157,11 +157,11 @@ factoryLogger.AddDebug(""created by ILoggerFactory"");"
 
         private void LoggerFactoryIsolatedDemoForm_Shown(object sender, EventArgs e)
         {
-            _serviceLogger.AddInfo("左侧日志接口通过 LoggerService 获取。");
-            _serviceLogger.AddInfo("这里使用了独立名字，因此不会与其他 Demo 窗口共享。");
+            _serviceLogger.Info("左侧日志接口通过 LoggerService 获取。");
+            _serviceLogger.Info("这里使用了独立名字，因此不会与其他 Demo 窗口共享。");
 
-            _factoryLogger.AddInfo("右侧日志接口通过 ILoggerFactory.CreateLogger 创建。");
-            _factoryLogger.AddInfo("它同样只服务当前窗体。");
+            _factoryLogger.Info("右侧日志接口通过 ILoggerFactory.CreateLogger 创建。");
+            _factoryLogger.Info("它同样只服务当前窗体。");
 
             UpdateStatus("Demo 已就绪");
         }
@@ -169,14 +169,14 @@ factoryLogger.AddDebug(""created by ILoggerFactory"");"
         private void WriteServiceButton_Click(object sender, EventArgs e)
         {
             _serviceSequence++;
-            _serviceLogger.AddInfo(string.Format("服务日志源写入第 {0} 条演示消息。", _serviceSequence));
+            _serviceLogger.Info(string.Format("服务日志源写入第 {0} 条演示消息。", _serviceSequence));
             UpdateStatus("已写入一条服务日志");
         }
 
         private void WriteFactoryButton_Click(object sender, EventArgs e)
         {
             _factorySequence++;
-            _factoryLogger.AddDebug(string.Format("工厂日志源写入第 {0} 条演示消息。", _factorySequence));
+            _factoryLogger.Debug(string.Format("工厂日志源写入第 {0} 条演示消息。", _factorySequence));
             UpdateStatus("已写入一条工厂日志");
         }
 
@@ -185,8 +185,8 @@ factoryLogger.AddDebug(""created by ILoggerFactory"");"
             _serviceSequence++;
             _factorySequence++;
 
-            _serviceLogger.AddSuccess(string.Format("服务日志源写入第 {0} 条联动消息。", _serviceSequence));
-            _factoryLogger.AddWarning(string.Format("工厂日志源写入第 {0} 条联动消息。", _factorySequence));
+            _serviceLogger.Success(string.Format("服务日志源写入第 {0} 条联动消息。", _serviceSequence));
+            _factoryLogger.Warning(string.Format("工厂日志源写入第 {0} 条联动消息。", _factorySequence));
 
             UpdateStatus("两边都已写入一条日志");
         }

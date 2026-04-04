@@ -217,7 +217,7 @@ ILogSessionSource session = logger as ILogSessionSource;
 
 logPanel.Logger = logger;
 
-logger.AddInfo(""runtime metrics demo ready"");
+logger.Info(""runtime metrics demo ready"");
 
 int buffered = metrics != null ? metrics.BufferedSessionEntryCount : 0;
 int dropped = metrics != null ? metrics.DroppedPendingEntryCount : 0;
@@ -255,8 +255,8 @@ int total = session != null ? session.SessionEntryCount : 0;"
 
         private void MemoryMetricsDemoForm_Shown(object sender, EventArgs e)
         {
-            _logger.AddInfo("Memory metrics demo started.");
-            _logger.AddInfo("Write sample, burst, or extreme traffic to inspect buffered session entries and verify logs are first persisted to local WAL/spool before slow backend replay.");
+            _logger.Info("Memory metrics demo started.");
+            _logger.Info("Write sample, burst, or extreme traffic to inspect buffered session entries and verify logs are first persisted to local WAL/spool before slow backend replay.");
             RefreshRuntimeState();
             _refreshTimer.Start();
         }
@@ -282,13 +282,13 @@ int total = session != null ? session.SessionEntryCount : 0;"
         private void WriteSampleEntries()
         {
             _sequence++;
-            _logger.AddTrace(string.Format("TRACE sample #{0}", _sequence));
-            _logger.AddDebug("DEBUG metrics inspection");
-            _logger.AddInfo("INFO sample entry");
-            _logger.AddSuccess("SUCCESS sample entry");
-            _logger.AddWarning("WARN sample entry");
-            _logger.AddError("ERROR sample entry");
-            _logger.AddFatal("FATAL sample entry");
+            _logger.Trace(string.Format("TRACE sample #{0}", _sequence));
+            _logger.Debug("DEBUG metrics inspection");
+            _logger.Info("INFO sample entry");
+            _logger.Success("SUCCESS sample entry");
+            _logger.Warning("WARN sample entry");
+            _logger.Error("ERROR sample entry");
+            _logger.Fatal("FATAL sample entry");
         }
 
         private async Task RunBurstAsync(int total, int batchSize)

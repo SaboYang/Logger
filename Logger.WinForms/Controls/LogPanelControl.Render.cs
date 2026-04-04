@@ -314,39 +314,39 @@ namespace Logger.WinForms.Controls
             get { return _currentViewSource as LogStore; }
         }
 
-        public void AddTrace(string message)
+        public void Trace(string message)
         {
-            ExecuteOnUiThread(() => _currentLogger?.AddTrace(message));
+            ExecuteOnUiThread(() => _currentLogger?.Trace(message));
         }
 
-        public void AddDebug(string message)
+        public void Debug(string message)
         {
-            ExecuteOnUiThread(() => _currentLogger?.AddDebug(message));
+            ExecuteOnUiThread(() => _currentLogger?.Debug(message));
         }
 
-        public void AddInfo(string message)
+        public void Info(string message)
         {
-            ExecuteOnUiThread(() => _currentLogger?.AddInfo(message));
+            ExecuteOnUiThread(() => _currentLogger?.Info(message));
         }
 
-        public void AddSuccess(string message)
+        public void Success(string message)
         {
-            ExecuteOnUiThread(() => _currentLogger?.AddSuccess(message));
+            ExecuteOnUiThread(() => _currentLogger?.Success(message));
         }
 
-        public void AddWarning(string message)
+        public void Warning(string message)
         {
-            ExecuteOnUiThread(() => _currentLogger?.AddWarning(message));
+            ExecuteOnUiThread(() => _currentLogger?.Warning(message));
         }
 
-        public void AddError(string message)
+        public void Error(string message)
         {
-            ExecuteOnUiThread(() => _currentLogger?.AddError(message));
+            ExecuteOnUiThread(() => _currentLogger?.Error(message));
         }
 
-        public void AddFatal(string message)
+        public void Fatal(string message)
         {
-            ExecuteOnUiThread(() => _currentLogger?.AddFatal(message));
+            ExecuteOnUiThread(() => _currentLogger?.Fatal(message));
         }
 
         public void AddLog(LogLevel level, string message)

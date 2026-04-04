@@ -48,37 +48,37 @@ namespace Logger.Core
             get { return 0; }
         }
 
-        public void AddTrace(string message)
+        public void Trace(string message)
         {
             AddLog(LogLevel.Trace, message);
         }
 
-        public void AddDebug(string message)
+        public void Debug(string message)
         {
             AddLog(LogLevel.Debug, message);
         }
 
-        public void AddInfo(string message)
+        public void Info(string message)
         {
             AddLog(LogLevel.Info, message);
         }
 
-        public void AddSuccess(string message)
+        public void Success(string message)
         {
             AddLog(LogLevel.Success, message);
         }
 
-        public void AddWarning(string message)
+        public void Warning(string message)
         {
             AddLog(LogLevel.Warn, message);
         }
 
-        public void AddError(string message)
+        public void Error(string message)
         {
             AddLog(LogLevel.Error, message);
         }
 
-        public void AddFatal(string message)
+        public void Fatal(string message)
         {
             AddLog(LogLevel.Fatal, message);
         }

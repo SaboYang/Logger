@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Windows;
@@ -132,39 +132,39 @@ namespace Logger.Wpf.Controls
             get { return _currentViewSource as LogStore; }
         }
 
-        public void AddTrace(string message)
+        public void Trace(string message)
         {
-            Logger?.AddTrace(message);
+            Logger?.Trace(message);
         }
 
-        public void AddDebug(string message)
+        public void Debug(string message)
         {
-            Logger?.AddDebug(message);
+            Logger?.Debug(message);
         }
 
-        public void AddInfo(string message)
+        public void Info(string message)
         {
-            Logger?.AddInfo(message);
+            Logger?.Info(message);
         }
 
-        public void AddSuccess(string message)
+        public void Success(string message)
         {
-            Logger?.AddSuccess(message);
+            Logger?.Success(message);
         }
 
-        public void AddWarning(string message)
+        public void Warning(string message)
         {
-            Logger?.AddWarning(message);
+            Logger?.Warning(message);
         }
 
-        public void AddError(string message)
+        public void Error(string message)
         {
-            Logger?.AddError(message);
+            Logger?.Error(message);
         }
 
-        public void AddFatal(string message)
+        public void Fatal(string message)
         {
-            Logger?.AddFatal(message);
+            Logger?.Fatal(message);
         }
 
         public void AddLog(LogLevel level, string message)
