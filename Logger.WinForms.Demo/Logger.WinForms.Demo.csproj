@@ -13,11 +13,4 @@
     <ProjectReference Include="..\Logger.WinForms\Logger.WinForms.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Compile Remove="CodeSamplePanel.cs" />
-    <Compile Remove="FileLogDemoForm.cs" />
-    <Compile Remove="LoggerFactoryIsolatedDemoForm.cs" />
-    <Compile Remove="StorageBackendDemoForm.cs" />
-    <Compile Remove="StorageBackendDemoForm.View.cs" />
-  </ItemGroup>
 </Project>
