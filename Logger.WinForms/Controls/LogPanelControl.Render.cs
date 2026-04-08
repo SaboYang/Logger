@@ -555,6 +555,11 @@ namespace Logger.WinForms.Controls
             clearAllItem.Click += ClearAllFilterMenuItem_Click;
             menu.Items.Add(clearAllItem);
 
+            ToolStripMenuItem defaultItem = new ToolStripMenuItem("默认");
+            defaultItem.Text = "默认";
+            defaultItem.Click += DefaultFilterMenuItem_Click;
+            menu.Items.Add(defaultItem);
+
             menu.Items.Add(new ToolStripSeparator());
 
             foreach (LogLevel level in FilterLevels)
@@ -569,16 +574,6 @@ namespace Logger.WinForms.Controls
                 _filterMenuItems[level] = item;
                 menu.Items.Add(item);
             }
-
-            menu.Items.Add(new ToolStripSeparator());
-
-            ToolStripMenuItem closeItem = new ToolStripMenuItem("取消")
-            {
-                AutoToolTip = false
-            };
-            closeItem.Text = "取消";
-            closeItem.Click += CloseFilterMenuItem_Click;
-            menu.Items.Add(closeItem);
 
             return menu;
         }
@@ -839,6 +834,11 @@ namespace Logger.WinForms.Controls
             LevelFilter = LogLevelFilter.None;
         }
 
+        private void DefaultFilterMenuItem_Click(object sender, EventArgs e)
+        {
+            LevelFilter = DefaultLevelFilter;
+        }
+
         private void FilterMenuItem_Click(object sender, EventArgs e)
         {
             if (_updatingFilterMenu)
@@ -854,14 +854,6 @@ namespace Logger.WinForms.Controls
 
             LogLevel level = (LogLevel)item.Tag;
             SetLevelVisible(level, item.Checked);
-        }
-
-        private void CloseFilterMenuItem_Click(object sender, EventArgs e)
-        {
-            if (_filterMenu != null && _filterMenu.Visible)
-            {
-                _filterMenu.Close();
-            }
         }
 
         private void SearchTextBox_TextChanged(object sender, EventArgs e)

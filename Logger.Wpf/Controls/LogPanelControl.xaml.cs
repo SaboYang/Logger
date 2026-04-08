@@ -519,6 +519,11 @@ namespace Logger.Wpf.Controls
             LevelFilter = LogLevelFilter.None;
         }
 
+        private void DefaultFilterMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            LevelFilter = DefaultLevelFilter;
+        }
+
         private void LevelFilterMenuItem_Click(object sender, RoutedEventArgs e)
         {
             if (_updatingFilterMenu)
@@ -549,6 +554,7 @@ namespace Logger.Wpf.Controls
 
             _filterMenu.Items.Add(CreateCommandMenuItem("全选", SelectAllFilterMenuItem_Click));
             _filterMenu.Items.Add(CreateCommandMenuItem("全不选", ClearAllFilterMenuItem_Click));
+            _filterMenu.Items.Add(CreateCommandMenuItem("默认", DefaultFilterMenuItem_Click));
             _filterMenu.Items.Add(new Separator());
 
             foreach (LogLevel level in FilterLevels)
