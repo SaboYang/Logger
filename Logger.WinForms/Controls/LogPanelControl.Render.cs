@@ -15,6 +15,7 @@ namespace Logger.WinForms.Controls
     {
         private const int SearchRefreshDelayMilliseconds = 180;
         private const int HighThroughputRefreshCoalesceMilliseconds = 8;
+        private const int FilterMenuCloseDelayMilliseconds = 120;
         private const LogLevelFilter DefaultLevelFilter =
             LogLevelFilter.Info |
             LogLevelFilter.Success |
@@ -42,6 +43,7 @@ namespace Logger.WinForms.Controls
         private readonly Button _clearButton;
         private readonly ContextMenuStrip _filterMenu;
         private readonly System.Windows.Forms.Timer _searchRefreshTimer;
+        private readonly System.Windows.Forms.Timer _filterMenuCloseTimer;
         private readonly LogGridView _logGrid;
         private readonly Font _levelFont;
         private readonly DataGridViewTextBoxColumn _messageColumn;
@@ -56,7 +58,7 @@ namespace Logger.WinForms.Controls
         private bool _autoScrollToEnd = true;
         private bool _highThroughputMode = true;
         private bool _searchBoxVisible;
-        private int _maxLogEntries = 500;
+        private int _maxLogEntries = 3000;
         private LogLevelFilter _levelFilter = DefaultLevelFilter;
         private ILoggerOutput _currentLogger;
         private ILogViewSource _currentViewSource;
@@ -90,11 +92,20 @@ namespace Logger.WinForms.Controls
             };
 
             _filterMenu = BuildFilterMenu();
+            _filterMenu.Opened += FilterMenu_Opened;
+            _filterMenu.Closed += FilterMenu_Closed;
+            _filterMenu.MouseEnter += FilterSurface_MouseEnter;
+            _filterMenu.MouseLeave += FilterSurface_MouseLeave;
             _searchRefreshTimer = new System.Windows.Forms.Timer
             {
                 Interval = SearchRefreshDelayMilliseconds
             };
             _searchRefreshTimer.Tick += SearchRefreshTimer_Tick;
+            _filterMenuCloseTimer = new System.Windows.Forms.Timer
+            {
+                Interval = FilterMenuCloseDelayMilliseconds
+            };
+            _filterMenuCloseTimer.Tick += FilterMenuCloseTimer_Tick;
 
             _searchTextBox = new TextBox
             {
@@ -114,6 +125,8 @@ namespace Logger.WinForms.Controls
                 UseVisualStyleBackColor = true
             };
             _filterButton.Click += FilterButton_Click;
+            _filterButton.MouseEnter += FilterSurface_MouseEnter;
+            _filterButton.MouseLeave += FilterSurface_MouseLeave;
 
             _copyButton = new Button
             {
@@ -433,7 +446,15 @@ namespace Logger.WinForms.Controls
                 _searchTextBox.TextChanged -= SearchTextBox_TextChanged;
                 _searchRefreshTimer.Tick -= SearchRefreshTimer_Tick;
                 _searchRefreshTimer.Stop();
+                _filterMenuCloseTimer.Tick -= FilterMenuCloseTimer_Tick;
+                _filterMenuCloseTimer.Stop();
+                _filterMenu.MouseEnter -= FilterSurface_MouseEnter;
+                _filterMenu.MouseLeave -= FilterSurface_MouseLeave;
+                _filterMenu.Opened -= FilterMenu_Opened;
+                _filterMenu.Closed -= FilterMenu_Closed;
                 _filterButton.Click -= FilterButton_Click;
+                _filterButton.MouseEnter -= FilterSurface_MouseEnter;
+                _filterButton.MouseLeave -= FilterSurface_MouseLeave;
                 _copyButton.Click -= CopyButton_Click;
                 _clearButton.Click -= ClearButton_Click;
                 _logGrid.CellFormatting -= LogGrid_CellFormatting;
@@ -444,6 +465,7 @@ namespace Logger.WinForms.Controls
                 }
                 _filterMenu.Dispose();
                 _searchRefreshTimer.Dispose();
+                _filterMenuCloseTimer.Dispose();
                 _levelFont.Dispose();
                 _searchTextBox.Font.Dispose();
                 _headerLabel.Font.Dispose();
@@ -822,6 +844,7 @@ namespace Logger.WinForms.Controls
 
             Point location = _filterButton.PointToScreen(new Point(0, _filterButton.Height));
             _filterMenu.Show(location);
+            UpdateFilterMenuCloseWatch();
         }
 
         private void SelectAllFilterMenuItem_Click(object sender, EventArgs e)
@@ -854,6 +877,45 @@ namespace Logger.WinForms.Controls
 
             LogLevel level = (LogLevel)item.Tag;
             SetLevelVisible(level, item.Checked);
+        }
+
+        private void FilterMenu_Opened(object sender, EventArgs e)
+        {
+            UpdateFilterUi();
+            UpdateFilterMenuCloseWatch();
+        }
+
+        private void FilterMenu_Closed(object sender, ToolStripDropDownClosedEventArgs e)
+        {
+            _filterMenuCloseTimer.Stop();
+        }
+
+        private void FilterSurface_MouseEnter(object sender, EventArgs e)
+        {
+            _filterMenuCloseTimer.Stop();
+        }
+
+        private void FilterSurface_MouseLeave(object sender, EventArgs e)
+        {
+            UpdateFilterMenuCloseWatch();
+        }
+
+        private void FilterMenuCloseTimer_Tick(object sender, EventArgs e)
+        {
+            if (_filterMenu == null || !_filterMenu.Visible)
+            {
+                _filterMenuCloseTimer.Stop();
+                return;
+            }
+
+            if (IsPointerOverFilterSurface())
+            {
+                _filterMenuCloseTimer.Stop();
+                return;
+            }
+
+            _filterMenuCloseTimer.Stop();
+            _filterMenu.Close();
         }
 
         private void SearchTextBox_TextChanged(object sender, EventArgs e)
@@ -1117,6 +1179,53 @@ namespace Logger.WinForms.Controls
             }
 
             _searchTextBox.Visible = _searchBoxVisible;
+        }
+
+        private void UpdateFilterMenuCloseWatch()
+        {
+            if (_filterMenuCloseTimer == null)
+            {
+                return;
+            }
+
+            if (_filterMenu == null || !_filterMenu.Visible)
+            {
+                _filterMenuCloseTimer.Stop();
+                return;
+            }
+
+            if (IsPointerOverFilterSurface())
+            {
+                _filterMenuCloseTimer.Stop();
+                return;
+            }
+
+            _filterMenuCloseTimer.Stop();
+            _filterMenuCloseTimer.Start();
+        }
+
+        private bool IsPointerOverFilterSurface()
+        {
+            if (_filterButton != null && !_filterButton.IsDisposed && _filterButton.IsHandleCreated)
+            {
+                Rectangle buttonBounds = _filterButton.RectangleToScreen(_filterButton.ClientRectangle);
+                if (buttonBounds.Contains(Cursor.Position))
+                {
+                    return true;
+                }
+            }
+
+            if (_filterMenu != null && _filterMenu.Visible)
+            {
+                Point menuLocation = _filterMenu.PointToScreen(Point.Empty);
+                Rectangle menuBounds = new Rectangle(menuLocation, _filterMenu.Size);
+                if (menuBounds.Contains(Cursor.Position))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private string GetFilterButtonText()

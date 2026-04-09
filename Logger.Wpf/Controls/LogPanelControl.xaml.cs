@@ -61,7 +61,7 @@ namespace Logger.Wpf.Controls
                 nameof(MaxLogEntries),
                 typeof(int),
                 typeof(LogPanelControl),
-                new PropertyMetadata(500, OnMaxLogEntriesChanged));
+                new PropertyMetadata(3000, OnMaxLogEntriesChanged));
 
         public static readonly DependencyProperty LoggerProperty =
             DependencyProperty.Register(

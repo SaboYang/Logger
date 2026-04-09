@@ -22,7 +22,7 @@ namespace Logger.WinForms.Controls
         private readonly ElementHost _elementHost;
         private readonly WpfLogPanel _wpfLogPanel;
         private string _header = "运行日志";
-        private int _maxLogEntries = 500;
+        private int _maxLogEntries = 3000;
         private LogLevelFilter _levelFilter = DefaultLevelFilter;
         private string _searchText = string.Empty;
         private bool _searchBoxVisible;
@@ -62,7 +62,7 @@ namespace Logger.WinForms.Controls
         }
 
         [Category("Behavior")]
-        [DefaultValue(500)]
+        [DefaultValue(3000)]
         public int MaxLogEntries
         {
             get { return _maxLogEntries; }
