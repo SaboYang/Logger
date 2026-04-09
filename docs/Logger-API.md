@@ -537,9 +537,24 @@ logger.Info("订单服务启动");
 
 - `TextFileLogStorageBackendFactory`
 - `CsvFileLogStorageBackendFactory`
-- `LogFileRollingMode.SingleFile / Year / Month / Week / Day`
+- `LogFileRollingMode.SingleFile / Year / Month / Week / Day / DayWithRetention`
 
 默认文件滚动方式是 `LogFileRollingMode.Day`。
+
+如果本地目录下存在 `Logger.config`，会先按 logger 名称查找配置；找不到该文件或找不到对应名称时，会回退到默认配置。
+
+示例配置文件 `Logger.config`：
+
+```xml
+<loggerConfiguration>
+  <default logRootDirectoryPath="Logs" rollingMode="DayWithRetention" rollingRetentionDays="30" />
+  <logger name="OrderService" logRootDirectoryPath="OrderLogs" rollingMode="DayWithRetention" rollingRetentionDays="30" />
+</loggerConfiguration>
+```
+
+完整模板见 [Logger.config.sample.xml](Logger.config.sample.xml)。这个模板展示了 `default` 全局兜底、按名称覆盖、相对路径和绝对路径写法，以及 `DayWithRetention` 的保留天数配置。
+
+如果想直接看运行时效果，可以启动 `Logger.WinForms.Demo.exe --config-demo`。
 
 滚动分文件是按日志时间戳执行的：
 

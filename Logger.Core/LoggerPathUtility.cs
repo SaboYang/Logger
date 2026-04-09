@@ -95,6 +95,7 @@ namespace Logger.Core
                     int weekNumber;
                     GetIsoWeek(timestamp, out weekYear, out weekNumber);
                     return string.Format("{0}-W{1:00}.{2}", weekYear, weekNumber, extension);
+                case LogFileRollingMode.DayWithRetention:
                 case LogFileRollingMode.Day:
                 default:
                     return timestamp.ToString("yyyyMMdd") + "." + extension;

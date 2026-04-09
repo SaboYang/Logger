@@ -13,6 +13,7 @@ namespace Logger.Core
         private readonly object _syncRoot = new object();
         private readonly FileLogPathProvider _pathProvider;
         private readonly HashSet<string> _headerWrittenPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private DateTime _lastRetentionCleanupDate = DateTime.MinValue;
 
         public CsvFileLogStorageBackend(string logFilePath)
             : this(FileLogPathProvider.CreateFixed(logFilePath))
@@ -55,6 +56,8 @@ namespace Logger.Core
 
                 lock (_syncRoot)
                 {
+                    EnsureRetentionCleanup();
+
                     bool shouldWriteHeader = !_headerWrittenPaths.Contains(logFilePath)
                         && (!File.Exists(logFilePath) || new FileInfo(logFilePath).Length == 0);
 
@@ -79,6 +82,23 @@ namespace Logger.Core
                     }
                 }
             }
+        }
+
+        private void EnsureRetentionCleanup()
+        {
+            if (_pathProvider == null || !_pathProvider.ShouldCleanupExpiredDailyLogs)
+            {
+                return;
+            }
+
+            DateTime today = DateTime.Today;
+            if (_lastRetentionCleanupDate == today)
+            {
+                return;
+            }
+
+            LogFileRetentionCleaner.CleanupExpiredDailyLogFiles(_pathProvider, DateTime.Now);
+            _lastRetentionCleanupDate = today;
         }
 
         private Dictionary<string, List<LogEntry>> GroupEntriesByFilePath(IReadOnlyList<LogEntry> entries)

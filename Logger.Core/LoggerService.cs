@@ -19,7 +19,7 @@ namespace Logger.Core
         public static LoggerService Shared { get; } = new LoggerService();
 
         public LoggerService()
-            : this(new LogStoreLoggerFactory())
+            : this(LoggerConfiguration.CreateDefaultFactory())
         {
         }
 

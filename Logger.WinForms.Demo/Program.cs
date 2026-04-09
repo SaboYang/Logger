@@ -12,6 +12,12 @@ namespace Logger.WinForms.Demo
             Application.SetCompatibleTextRenderingDefault(false);
 
             DemoLaunchOptions options = DemoLaunchOptions.Parse(args);
+            if (options.OpenConfigDemo)
+            {
+                Application.Run(new LoggerConfigDemoForm());
+                return;
+            }
+
             if (options.OpenFactoryDemo)
             {
                 Application.Run(new LoggerFactoryIsolatedDemoForm());
@@ -60,6 +66,8 @@ namespace Logger.WinForms.Demo
 
             public bool OpenFactoryDemo { get; private set; }
 
+            public bool OpenConfigDemo { get; private set; }
+
             public bool OpenFileDemo { get; private set; }
 
             public bool OpenStorageDemo { get; private set; }
@@ -86,6 +94,10 @@ namespace Logger.WinForms.Demo
                              string.Equals(arg, "--log-manager-demo", StringComparison.OrdinalIgnoreCase))
                     {
                         options.OpenFactoryDemo = true;
+                    }
+                    else if (string.Equals(arg, "--config-demo", StringComparison.OrdinalIgnoreCase))
+                    {
+                        options.OpenConfigDemo = true;
                     }
                     else if (string.Equals(arg, "--file-demo", StringComparison.OrdinalIgnoreCase))
                     {

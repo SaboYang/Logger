@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  将这个文件放到程序启动目录，并命名为 Logger.config。
+  读取规则：
+  - 文件不存在：使用代码里的默认配置
+  - 文件存在：先按 logger name 查找
+  - 找不到对应名称：回退到 <default>
+-->
+<loggerConfiguration>
+  <!-- 全局默认配置。没有单独配置的 logger 都会使用它 -->
+  <default
+    logRootDirectoryPath="Logs"
+    rollingMode="DayWithRetention"
+    rollingRetentionDays="30" />
+
+  <!-- WPF 主窗口：按名称覆盖默认配置 -->
+  <logger
+    name="WpfApp1.MainWindow"
+    logRootDirectoryPath="Logs\WpfApp1"
+    rollingMode="DayWithRetention"
+    rollingRetentionDays="30" />
+
+  <!-- WinForms 示例：固定名称 logger -->
+  <logger
+    name="Logger.WinForms.Demo.Factory.Standalone"
+    logRootDirectoryPath="Logs\Demo\Factory"
+    rollingMode="Day" />
+
+  <!-- 本仓库的配置 Demo：命中这条命名 logger，另一个 logger 则回退到 default -->
+  <logger
+    name="Logger.WinForms.Demo.ConfigDemo.Configured"
+    logRootDirectoryPath="Logs\ConfigDemo\Named"
+    rollingMode="DayWithRetention"
+    rollingRetentionDays="7" />
+
+  <!-- 业务日志：按月滚动，走默认保留天数 -->
+  <logger
+    name="OrderService"
+    logRootDirectoryPath="D:\CompanyLogs\OrderService"
+    rollingMode="Month" />
+
+  <!-- 审计日志：单文件模式 -->
+  <logger
+    name="AuditTrail"
+    logRootDirectoryPath="Logs\Audit"
+    rollingMode="SingleFile" />
+</loggerConfiguration>

@@ -261,8 +261,24 @@ logger.Info("订单服务启动");
 - `LogFileRollingMode.Month`
 - `LogFileRollingMode.Week`
 - `LogFileRollingMode.Day`
+- `LogFileRollingMode.DayWithRetention`
 
 默认值是 `LogFileRollingMode.Day`。
+
+如果本地目录下存在 `Logger.config`，会先按 logger 名称查找配置；找不到该文件或找不到对应名称时，会回退到默认配置。
+
+示例配置文件 `Logger.config`：
+
+```xml
+<loggerConfiguration>
+  <default logRootDirectoryPath="Logs" rollingMode="DayWithRetention" rollingRetentionDays="30" />
+  <logger name="OrderService" logRootDirectoryPath="OrderLogs" rollingMode="DayWithRetention" rollingRetentionDays="30" />
+</loggerConfiguration>
+```
+
+完整模板见 [docs/Logger.config.sample.xml](docs/Logger.config.sample.xml)。这个模板包含 `default` 全局兜底、按名称覆盖和保留天数配置，直接复制到启动目录后改名为 `Logger.config` 即可。
+
+要看运行中的对照效果，可以直接启动 `Logger.WinForms.Demo.exe --config-demo`，它会同时展示命名 logger 和默认回退 logger 的差异。
 
 滚动判断基于每条日志自己的时间戳：
 

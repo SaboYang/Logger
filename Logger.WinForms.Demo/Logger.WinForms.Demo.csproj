@@ -13,4 +13,10 @@
     <ProjectReference Include="..\Logger.WinForms\Logger.WinForms.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="Logger.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

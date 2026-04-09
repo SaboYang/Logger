@@ -28,6 +28,7 @@ namespace Logger.WinForms.Demo
         private readonly Button _stressButton;
         private readonly Button _openWpfHostButton;
         private readonly Button _openFactoryDemoButton;
+        private readonly Button _openConfigDemoButton;
         private readonly Button _openFileDemoButton;
         private readonly Button _openStorageDemoButton;
         private readonly Button _openMemoryMetricsDemoButton;
@@ -40,7 +41,7 @@ namespace Logger.WinForms.Demo
 
         public MainForm()
         {
-            _logger = LogManager.Factory.CreateLogger("Logger.WinForms.Demo.MainForm");
+            _logger = LogManager.Factory.CreateLogger("Logger.WinForms.Demo.Main");
 
             Font = new Font("Microsoft YaHei UI", 9F, FontStyle.Regular, GraphicsUnit.Point);
             Text = "Logger WinForms 示例";
@@ -66,7 +67,7 @@ namespace Logger.WinForms.Demo
             {
                 Dock = DockStyle.Top,
                 AutoSize = true,
-                ColumnCount = 11,
+                ColumnCount = 12,
                 RowCount = 1,
                 Margin = new Padding(0, 0, 0, 10)
             };
@@ -79,8 +80,8 @@ namespace Logger.WinForms.Demo
             toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-            toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
 
             _sampleButton = new Button
@@ -126,6 +127,17 @@ namespace Logger.WinForms.Demo
                 UseVisualStyleBackColor = true
             };
             _openFactoryDemoButton.Click += OpenFactoryDemoButton_Click;
+
+            _openConfigDemoButton = new Button
+            {
+                AutoSize = true,
+                Height = 34,
+                Margin = new Padding(0, 0, 12, 0),
+                Padding = new Padding(12, 0, 12, 0),
+                Text = "打开配置 Demo",
+                UseVisualStyleBackColor = true
+            };
+            _openConfigDemoButton.Click += OpenConfigDemoButton_Click;
 
             _openFileDemoButton = new Button
             {
@@ -237,12 +249,13 @@ logger.Error(""line1\r\nline2"");"
             toolbar.Controls.Add(_stressButton, 1, 0);
             toolbar.Controls.Add(_openWpfHostButton, 2, 0);
             toolbar.Controls.Add(_openFactoryDemoButton, 3, 0);
-            toolbar.Controls.Add(_openFileDemoButton, 4, 0);
-            toolbar.Controls.Add(_openStorageDemoButton, 5, 0);
-            toolbar.Controls.Add(_openMemoryMetricsDemoButton, 6, 0);
-            toolbar.Controls.Add(countLabel, 7, 0);
-            toolbar.Controls.Add(_stressCountInput, 8, 0);
-            toolbar.Controls.Add(_statusLabel, 10, 0);
+            toolbar.Controls.Add(_openConfigDemoButton, 4, 0);
+            toolbar.Controls.Add(_openFileDemoButton, 5, 0);
+            toolbar.Controls.Add(_openStorageDemoButton, 6, 0);
+            toolbar.Controls.Add(_openMemoryMetricsDemoButton, 7, 0);
+            toolbar.Controls.Add(countLabel, 8, 0);
+            toolbar.Controls.Add(_stressCountInput, 9, 0);
+            toolbar.Controls.Add(_statusLabel, 11, 0);
 
             rootLayout.Controls.Add(toolbar, 0, 0);
             rootLayout.Controls.Add(infoLabel, 0, 1);
@@ -308,6 +321,14 @@ logger.Error(""line1\r\nline2"");"
             demoForm.Show(this);
             _logger.Info("已打开独立日志源模式的 ILoggerFactory / LoggerService Demo。");
             UpdateStatus("已打开工厂 Demo");
+        }
+
+        private void OpenConfigDemoButton_Click(object sender, EventArgs e)
+        {
+            LoggerConfigDemoForm demoForm = new LoggerConfigDemoForm();
+            demoForm.Show(this);
+            _logger.Info("已打开 Logger.config Demo。可以在窗体里对比命名 logger 和默认回退 logger。");
+            UpdateStatus("已打开配置 Demo");
         }
 
         private void OpenFileDemoButton_Click(object sender, EventArgs e)
@@ -427,6 +448,7 @@ logger.Error(""line1\r\nline2"");"
             _stressButton.Enabled = enabled;
             _openWpfHostButton.Enabled = enabled;
             _openFactoryDemoButton.Enabled = enabled;
+            _openConfigDemoButton.Enabled = enabled;
             _openFileDemoButton.Enabled = enabled;
             _openStorageDemoButton.Enabled = enabled;
             _openMemoryMetricsDemoButton.Enabled = enabled;

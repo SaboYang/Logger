@@ -16,6 +16,7 @@ namespace Logger.Core
         private readonly HashSet<string> _headerWrittenPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, WriterState> _writerStates =
             new Dictionary<string, WriterState>(StringComparer.OrdinalIgnoreCase);
+        private DateTime _lastRetentionCleanupDate = DateTime.MinValue;
         private bool _disposed;
 
         public TextFileLogStorageBackend(string logFilePath)
@@ -54,6 +55,7 @@ namespace Logger.Core
             lock (_syncRoot)
             {
                 ThrowIfDisposed();
+                EnsureRetentionCleanup();
 
                 foreach (KeyValuePair<string, List<LogEntry>> entryGroup in entryGroups)
                 {
@@ -162,6 +164,23 @@ namespace Logger.Core
 
             _headerWrittenPaths.Add(logFilePath);
             return writerState;
+        }
+
+        private void EnsureRetentionCleanup()
+        {
+            if (_pathProvider == null || !_pathProvider.ShouldCleanupExpiredDailyLogs)
+            {
+                return;
+            }
+
+            DateTime today = DateTime.Today;
+            if (_lastRetentionCleanupDate == today)
+            {
+                return;
+            }
+
+            LogFileRetentionCleaner.CleanupExpiredDailyLogFiles(_pathProvider, DateTime.Now);
+            _lastRetentionCleanupDate = today;
         }
 
         private static void WriteEntries(WriterState writerState, IReadOnlyList<LogEntry> entries)

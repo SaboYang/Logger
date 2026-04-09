@@ -16,12 +16,13 @@ namespace Logger.Core
             string logRootDirectoryPath = null,
             LogLevel minimumLevel = LogLevel.Trace,
             LogFileRollingMode rollingMode = LogFileRollingMode.Day,
+            int rollingRetentionDays = 30,
             int maxBufferedSessionEntries = 5000,
             int maxPendingStorageEntries = 5000,
             string spoolRootDirectoryPath = null,
             LogSpoolFlushMode spoolFlushMode = LogSpoolFlushMode.Buffered)
             : this(
-                  new TextFileLogStorageBackendFactory(logRootDirectoryPath, rollingMode),
+                  new TextFileLogStorageBackendFactory(logRootDirectoryPath, rollingMode, rollingRetentionDays),
                   minimumLevel,
                   maxBufferedSessionEntries,
                   maxPendingStorageEntries,

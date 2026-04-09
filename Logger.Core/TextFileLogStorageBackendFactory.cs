@@ -7,13 +7,16 @@ namespace Logger.Core
     {
         private readonly string _logRootDirectoryPath;
         private readonly LogFileRollingMode _rollingMode;
+        private readonly int _rollingRetentionDays;
 
         public TextFileLogStorageBackendFactory(
             string logRootDirectoryPath = null,
-            LogFileRollingMode rollingMode = LogFileRollingMode.Day)
+            LogFileRollingMode rollingMode = LogFileRollingMode.Day,
+            int rollingRetentionDays = 30)
         {
             _logRootDirectoryPath = LoggerPathUtility.ResolveLogRootDirectory(logRootDirectoryPath);
             _rollingMode = rollingMode;
+            _rollingRetentionDays = Math.Max(1, rollingRetentionDays);
         }
 
         public ILogStorageBackend CreateBackend(LogStorageContext context)
@@ -27,7 +30,8 @@ namespace Logger.Core
                 context.LoggerName,
                 _logRootDirectoryPath,
                 "log",
-                _rollingMode);
+                _rollingMode,
+                _rollingRetentionDays);
 
             return new TextFileLogStorageBackend(pathProvider);
         }
