@@ -1,11 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
   <PropertyGroup>
-    <TargetFramework>net48</TargetFramework>
+    <TargetFrameworks>net48;net8.0-windows</TargetFrameworks>
     <UseWPF>true</UseWPF>
     <AssemblyName>Logger.Wpf</AssemblyName>
     <RootNamespace>Logger.Wpf</RootNamespace>
     <ProjectGuid>{29064B1B-2C11-4604-80B2-BD26A7595B7D}</ProjectGuid>
     <LangVersion>7.3</LangVersion>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>

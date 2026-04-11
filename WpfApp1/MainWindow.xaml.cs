@@ -15,6 +15,9 @@ namespace WpfApp1
     /// <summary>
     /// MainWindow.xaml 的交互逻辑
     /// </summary>
+    #if NET8_0_OR_GREATER
+    [System.Runtime.Versioning.SupportedOSPlatform("windows7.0")]
+    #endif
     public partial class MainWindow : Window
     {
         private const int StressLogCount = 30000;
