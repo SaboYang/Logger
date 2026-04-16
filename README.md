@@ -1,24 +1,24 @@
 # Logger
 
-轻量日志组件，分为三层：
+一个轻量级日志组件，分为三层：
 
 - `Logger.Core`：日志接口、全局服务、存储扩展点
 - `Logger.Wpf`：WPF 日志控件
-- `Logger.WinForms`：WinForms 日志控件，以及 WinForms 承载 WPF 控件
+- `Logger.WinForms`：WinForms 日志控件，也可承载 WPF 控件
 
-目标是让业务代码只写 `ILoggerOutput`，UI 只负责绑定显示。
+目标是让业务代码只依赖 `ILoggerOutput`，UI 只负责展示。
 
 ## 特性
 
 - 统一日志接口：`Trace / Debug / Info / Success / Warn / Error / Fatal`
-- 同名 logger 在同一个 `ILoggerService` 中复用同一个实例
-- 默认最低等级是 `Trace`
+- 同名 logger 在同一个 `ILoggerService` 中复用同一实例
+- 默认最低等级为 `Trace`
 - 等级过滤发生在 logger 写入入口，不在存储层重复过滤
 - 支持 WPF / WinForms 绑定
-- 内置本地 `spool/WAL`，先顺序落本地，再由后台慢慢转存到文件、CSV 或自定义后端
-- 默认 `spool/WAL` 刷新模式是 `Buffered`，优先保证日志吞吐；需要更强本地持久化时可切到 `Durable`
-- 支持文本文件、CSV、自定义存储后端
-- 文件存储支持 `单文件 / 年 / 月 / 周 / 日` 五种滚动方式，默认按日
+- 内置本地 `spool/WAL`：先顺序落本地，再由后台慢慢转存到文件、CSV 或自定义后端
+- 默认 `spool/WAL` 刷新模式为 `Buffered`，优先保证日志吞吐；如果需要更强本地持久化，可切换到 `Durable`
+- 支持文本文件、CSV、以及自定义存储后端
+- 文件存储支持 `单文件 / 年 / 月 / 周 / 日 / 日带保留期` 五种滚动方式，默认按日滚动
 - UI 自带搜索、等级过滤、复制当前显示内容、清空视图
 - 搜索框默认隐藏，通过 `SearchBoxVisible` 属性控制显示
 
@@ -38,12 +38,12 @@ logger.Error("连接失败");
 
 说明：
 
-- `LogManager.GetLogger("MyApp")` 同名返回同一个实例
-- `"MyApp"`、`" myapp "`、`"MYAPP"` 会归一成同一个 logger
+- `LogManager.GetLogger("MyApp")` 会返回同名 logger
+- `"MyApp"`、`" myapp "`、`"MYAPP"` 最终会归并为同一个 logger
 
 ### 设置最低等级
 
-默认最低等级是 `Trace`，所以默认情况下全部等级都会被当前 logger 接收。
+默认最低等级是 `Trace`，也就是默认会接收全部等级日志。
 
 ```csharp
 using Logger.Core;
@@ -55,9 +55,9 @@ logger.SetMinimumLevel(LogLevel.Info);
 
 说明：
 
-- 等级过滤发生在 `ILoggerOutput.AddLog(...)` / `AddLogs(...)` 的入口
-- 会话记录、文件写入、自定义存储后端只消费已经通过入口过滤的日志
-- 如果多个调用方通过同一个名字拿到同一个 logger，那么它们共享同一个最低等级配置
+- 等级过滤发生在 `ILoggerOutput.AddLog(...)` / `AddLogs(...)` 入口
+- 会话记录、文件写入、自定义存储后端只处理已经通过入口过滤的日志
+- 如果多个调用方通过同一个名字拿到同一个 logger，那么它们共享同一套最低等级配置
 
 ## 绑定到 WPF
 
@@ -164,12 +164,12 @@ public partial class MainForm : Form
 
 - `SearchBoxVisible` 默认是 `false`
 - 搜索框是否显示由代码控制，不依赖控件头部按钮
-- `CopyLogs()` 或头部“复制全部”按钮会复制当前控件里全部可见日志
-- 复制内容会遵循当前 `LevelFilter`、`SearchText` 和 `ClearLogs()` 后的视图范围
+- `CopyLogs()` 或头部“复制全部”按钮会复制当前控件里所有可见日志
+- 复制内容会遵循当前 `LevelFilter`、`SearchText` 和 `ClearLogs()` 之后的视图范围
 
 ## 合并多个 ILoggerOutput
 
-如果你要把多个 `ILoggerOutput` 聚合成一个新的 `ILoggerOutput`，可以使用 `LogManager.CreateMergedLogger(...)`：
+如果你想把多个 `ILoggerOutput` 聚合成一个新的 `ILoggerOutput`，可以使用 `LogManager.CreateMergedLogger(...)`：
 
 ```csharp
 using Logger.Core;
@@ -188,11 +188,11 @@ mergedLogger.Info("这条日志会同时写入 App 和 Device");
 - 新的 `mergedLogger` 本身也实现了 `ILogViewSource`，可以直接绑定到 WPF / WinForms 控件
 - UI 上会看到多个子 logger 的聚合结果
 - 对 `mergedLogger` 的写入会分发到所有子 logger
-- 只有实现了 `ILogViewSource` 的子 logger，才会参与聚合显示
+- 只有实现了 `ILogViewSource` 的子 logger 才会参与聚合显示
 
 ## 自定义存储后端
 
-如果要把日志改成写文本、CSV、数据库或其他介质，实现这两个接口：
+如果你要把日志改成写文本、CSV、数据库或其他介质，先实现这两个接口：
 
 - `ILogStorageBackend`
 - `ILogStorageBackendFactory`
@@ -244,12 +244,12 @@ logger.Info("订单服务启动");
 说明：
 
 - `minimumLevel` 配置的是 factory 创建出来的 logger 入口等级
-- 存储后端收到的是已经通过 logger 入口过滤的日志
+- 存储后端接收到的日志已经是通过入口过滤后的结果
 - `LogStorageContext.MinimumLevel` 只用于让后端知道当前 logger 的配置，不建议后端再次做等级过滤
-- `maxBufferedSessionEntries` 用来限制本场会话快照在内存中的保留条数
-- `maxPendingStorageEntries` 用来限制后台每次从本地 WAL 读取并转存的批量大小，不影响日志是否先落本地
-- `spoolRootDirectoryPath` 用来指定本地 `spool/WAL` 目录；不传时默认是 `AppContext.BaseDirectory\\LogSpool`
-- `spoolFlushMode` 默认是 `Buffered`，写入后只刷到 OS 文件缓存，吞吐更高；如果你要更强的本地落盘保证，可以改成 `LogSpoolFlushMode.Durable`
+- `maxBufferedSessionEntries` 用于限制本地会话在内存中的保留条数
+- `maxPendingStorageEntries` 用于限制后台每次从本地 WAL 读取并转存的批量大小，不影响日志是否先落本地
+- `spoolRootDirectoryPath` 用于指定本地 `spool/WAL` 目录；不传时默认是 `AppContext.BaseDirectory\\LogSpool`
+- `spoolFlushMode` 默认是 `Buffered`，写入后只刷新到 OS 文件缓存，吞吐更高；如果需要更强的本地落盘保证，可以改成 `LogSpoolFlushMode.Durable`
 - 当前持久化语义是 `at-least-once`：如果进程在“后端写成功”和“WAL checkpoint 更新”之间崩溃，恢复后可能出现极小窗口的重复重放
 
 ## 文件存储滚动方式
@@ -264,7 +264,6 @@ logger.Info("订单服务启动");
 - `LogFileRollingMode.DayWithRetention`
 
 默认值是 `LogFileRollingMode.Day`。
-
 如果本地目录下存在 `Logger.config`，会先按 logger 名称查找配置；找不到该文件或找不到对应名称时，会回退到默认配置。
 
 示例配置文件 `Logger.config`：

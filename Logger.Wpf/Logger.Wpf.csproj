@@ -2,15 +2,24 @@
   <PropertyGroup>
     <TargetFrameworks>net48;net8.0-windows</TargetFrameworks>
     <UseWPF>true</UseWPF>
+    <PackageId>ZH.Logger.Wpf</PackageId>
     <AssemblyName>Logger.Wpf</AssemblyName>
     <RootNamespace>Logger.Wpf</RootNamespace>
     <ProjectGuid>{29064B1B-2C11-4604-80B2-BD26A7595B7D}</ProjectGuid>
+    <Description>WPF log viewer controls for the Logger suite.</Description>
+    <PackageReadmeFile>NuGet.README.md</PackageReadmeFile>
     <LangVersion>7.3</LangVersion>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>disable</Nullable>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="..\NuGet.README.md" Pack="true" PackagePath="" />
     <ProjectReference Include="..\Logger.Core\Logger.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\LICENSE" Pack="true" PackagePath="" />
   </ItemGroup>
 </Project>

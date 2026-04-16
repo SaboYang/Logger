@@ -3,20 +3,29 @@
     <TargetFrameworks>net48;net8.0-windows</TargetFrameworks>
     <UseWindowsForms>true</UseWindowsForms>
     <UseWPF>true</UseWPF>
+    <PackageId>ZH.Logger.WinForms</PackageId>
     <AssemblyName>Logger.WinForms</AssemblyName>
     <RootNamespace>Logger.WinForms</RootNamespace>
     <ProjectGuid>{E0FE38C9-3511-474A-9C2E-6833D97D951D}</ProjectGuid>
+    <Description>WinForms logging controls and WPF hosting bridge for the Logger suite.</Description>
+    <PackageReadmeFile>NuGet.README.md</PackageReadmeFile>
     <LangVersion>7.3</LangVersion>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>disable</Nullable>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="..\NuGet.README.md" Pack="true" PackagePath="" />
     <ProjectReference Include="..\Logger.Core\Logger.Core.csproj" />
     <ProjectReference Include="..\Logger.Wpf\Logger.Wpf.csproj" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
     <Reference Include="WindowsFormsIntegration" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\LICENSE" Pack="true" PackagePath="" />
   </ItemGroup>
 </Project>

@@ -1,12 +1,21 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net48;netstandard2.0;net8.0</TargetFrameworks>
+    <PackageId>ZH.Logger.Core</PackageId>
     <AssemblyName>Logger.Core</AssemblyName>
     <RootNamespace>Logger.Core</RootNamespace>
     <ProjectGuid>{7F2F6E48-FE78-4DC0-8314-03CE76A776BD}</ProjectGuid>
+    <Description>Core logging abstractions and storage infrastructure for the Logger suite.</Description>
+    <PackageReadmeFile>NuGet.README.md</PackageReadmeFile>
     <LangVersion>7.3</LangVersion>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>disable</Nullable>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\NuGet.README.md" Pack="true" PackagePath="" />
+    <None Include="..\LICENSE" Pack="true" PackagePath="" />
+  </ItemGroup>
 
 </Project>
