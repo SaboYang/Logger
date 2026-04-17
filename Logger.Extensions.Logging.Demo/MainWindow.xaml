@@ -1,0 +1,69 @@
+<Window x:Class="Logger.Extensions.Logging.Demo.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:lw="clr-namespace:Logger.Wpf.Controls;assembly=Logger.Wpf"
+        mc:Ignorable="d"
+        Title="Logger.Core ILogger&lt;T&gt; DI Demo"
+        Width="1360"
+        Height="900"
+        Background="#FFF4F7FB"
+        WindowStartupLocation="CenterScreen">
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="0,0,0,12">
+            <TextBlock FontFamily="Microsoft YaHei UI"
+                       FontSize="24"
+                       FontWeight="Bold"
+                       Foreground="#FF0F172A"
+                       Text="Logger.Core 接入 ILogger&lt;T&gt; 的独立 Demo" />
+            <TextBlock Margin="0,6,0,0"
+                       FontFamily="Microsoft YaHei UI"
+                       FontSize="13"
+                       Foreground="#FF475569"
+                       Text="这个 Demo 通过容器启动，窗口和业务服务都使用 ILogger&lt;T&gt;，日志同时进入 UI 面板和文件链路。" />
+        </StackPanel>
+
+        <Border Grid.Row="1"
+                Margin="0,0,0,12"
+                Padding="12"
+                Background="#FFFFFFFF"
+                BorderBrush="#FFD7E2EC"
+                BorderThickness="1"
+                CornerRadius="10">
+            <WrapPanel>
+                <Button Margin="0,0,8,8"
+                        Padding="14,8"
+                        Click="WriteWindowLog_Click"
+                        Content="写入窗口日志" />
+                <Button Margin="0,0,8,8"
+                        Padding="14,8"
+                        Click="WriteServiceLog_Click"
+                        Content="写入服务日志" />
+                <Button Margin="0,0,8,8"
+                        Padding="14,8"
+                        Click="WriteBatchLog_Click"
+                        Content="批量写入日志" />
+                <Button Margin="0,0,8,8"
+                        Padding="14,8"
+                        Click="WriteExceptionLog_Click"
+                        Content="异常示例" />
+                <Button Margin="0,0,8,8"
+                        Padding="14,8"
+                        Click="ClearPanelLog_Click"
+                        Content="清空面板" />
+            </WrapPanel>
+        </Border>
+
+        <lw:LogPanelControl x:Name="LogPanel"
+                            Grid.Row="2"
+                            Header="DI 日志面板"
+                            SearchBoxVisible="True" />
+    </Grid>
+</Window>
