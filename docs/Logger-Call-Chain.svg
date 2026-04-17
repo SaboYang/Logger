@@ -1,0 +1,163 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">日志从业务调用到 UI / 文件的调用链图</title>
+  <desc id="desc">展示业务代码通过 ILoggerOutput 写日志后，如何分发到 UI 内存视图、会话缓冲和文件落盘链路。</desc>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b1020"/>
+      <stop offset="100%" stop-color="#10192f"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#16233a"/>
+      <stop offset="100%" stop-color="#1d2b46"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#60a5fa"/>
+    </linearGradient>
+    <linearGradient id="fileGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f766e"/>
+      <stop offset="100%" stop-color="#14b8a6"/>
+    </linearGradient>
+    <linearGradient id="uiGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#a855f7"/>
+    </linearGradient>
+    <linearGradient id="cacheGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#475569"/>
+      <stop offset="100%" stop-color="#64748b"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="16" flood-color="#000000" flood-opacity="0.35"/>
+    </filter>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M 0 0 L 12 6 L 0 12 z" fill="#cbd5e1"/>
+    </marker>
+    <marker id="arrowAccent" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M 0 0 L 12 6 L 0 12 z" fill="#60a5fa"/>
+    </marker>
+    <marker id="arrowDashed" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M 0 0 L 12 6 L 0 12 z" fill="#fbbf24"/>
+    </marker>
+    <style>
+      .title { font: 700 34px "Microsoft YaHei UI", "Segoe UI", sans-serif; fill: #f8fafc; }
+      .subtitle { font: 400 16px "Microsoft YaHei UI", "Segoe UI", sans-serif; fill: #cbd5e1; }
+      .label { font: 700 18px "Microsoft YaHei UI", "Segoe UI", sans-serif; fill: #f8fafc; }
+      .text { font: 400 15px "Microsoft YaHei UI", "Segoe UI", sans-serif; fill: #dbeafe; }
+      .small { font: 400 13px "Microsoft YaHei UI", "Segoe UI", sans-serif; fill: #cbd5e1; }
+      .note { font: 400 14px "Microsoft YaHei UI", "Segoe UI", sans-serif; fill: #cbd5e1; }
+      .card { fill: url(#card); stroke: #334155; stroke-width: 1.2; rx: 18; ry: 18; filter: url(#shadow); }
+      .cardAccent { fill: url(#accent); stroke: #93c5fd; stroke-width: 1.2; rx: 18; ry: 18; filter: url(#shadow); }
+      .cardUi { fill: url(#uiGrad); stroke: #c084fc; stroke-width: 1.2; rx: 18; ry: 18; filter: url(#shadow); }
+      .cardFile { fill: url(#fileGrad); stroke: #5eead4; stroke-width: 1.2; rx: 18; ry: 18; filter: url(#shadow); }
+      .cardCache { fill: url(#cacheGrad); stroke: #94a3b8; stroke-width: 1.2; rx: 18; ry: 18; filter: url(#shadow); }
+      .lane { stroke: #475569; stroke-width: 2; }
+      .solid { stroke: #cbd5e1; stroke-width: 3; fill: none; marker-end: url(#arrow); }
+      .accent { stroke: #60a5fa; stroke-width: 4; fill: none; marker-end: url(#arrowAccent); }
+      .dashed { stroke: #fbbf24; stroke-width: 3; fill: none; stroke-dasharray: 10 8; marker-end: url(#arrowDashed); }
+      .fine { stroke: #94a3b8; stroke-width: 2; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1600" height="900" fill="url(#bg)"/>
+  <circle cx="1400" cy="130" r="260" fill="#1d4ed8" opacity="0.12"/>
+  <circle cx="250" cy="760" r="300" fill="#a855f7" opacity="0.08"/>
+
+  <text x="80" y="78" class="title">日志从业务调用到 UI / 文件的调用链</text>
+  <text x="80" y="108" class="subtitle">实线表示当前同步调用路径，虚线表示后台线程或异步刷盘</text>
+
+  <!-- Business entry -->
+  <rect x="80" y="170" width="250" height="180" class="cardAccent"/>
+  <text x="110" y="210" class="label">业务代码</text>
+  <text x="110" y="242" class="text">MainWindow / ViewModel</text>
+  <text x="110" y="268" class="text">Service / Controller</text>
+  <text x="110" y="304" class="small">调用：Trace / Debug / Info</text>
+  <text x="110" y="330" class="small">或：AddLog / AddLogs</text>
+
+  <!-- LoggerService -->
+  <rect x="390" y="170" width="280" height="180" class="card"/>
+  <text x="420" y="210" class="label">LogManager / LoggerService</text>
+  <text x="420" y="242" class="text">按名称获取 logger</text>
+  <text x="420" y="268" class="text">缓存与复用 logger 实例</text>
+  <text x="420" y="294" class="small">GetLogger / Default / Release</text>
+  <text x="420" y="320" class="small">工厂：CreateLogger(name)</text>
+
+  <!-- Composite / Merged -->
+  <rect x="760" y="145" width="320" height="220" class="cardAccent"/>
+  <text x="790" y="185" class="label">统一入口</text>
+  <text x="790" y="218" class="text">CompositeLogger</text>
+  <text x="790" y="244" class="text">MergedLogger</text>
+  <text x="790" y="270" class="small">统一分发 / 合并多个输出</text>
+  <text x="790" y="296" class="small">MinimumLevel 过滤</text>
+  <text x="790" y="322" class="small">AddLog / AddLogs 同步调用</text>
+
+  <!-- UI branch -->
+  <rect x="1135" y="80" width="370" height="250" class="cardUi"/>
+  <text x="1165" y="120" class="label">UI 内存视图</text>
+  <text x="1165" y="152" class="text">LogStore</text>
+  <text x="1165" y="178" class="text">ObservableCollection&lt;LogEntry&gt;</text>
+  <text x="1165" y="204" class="small">同步写入内存集合</text>
+  <text x="1165" y="230" class="text">LogPanelControl / LogViewerControl</text>
+  <text x="1165" y="256" class="small">CollectionChanged → Dispatcher 刷新</text>
+  <text x="1165" y="282" class="small">ListBox / DataGridView 绑定显示</text>
+
+  <!-- Session buffer -->
+  <rect x="1135" y="360" width="370" height="170" class="cardCache"/>
+  <text x="1165" y="400" class="label">会话缓冲</text>
+  <text x="1165" y="432" class="text">LogSessionBuffer</text>
+  <text x="1165" y="458" class="small">保存当前会话日志快照</text>
+  <text x="1165" y="484" class="small">用于统计 / 回放 / 合并</text>
+
+  <!-- File branch -->
+  <rect x="760" y="430" width="320" height="220" class="cardFile"/>
+  <text x="790" y="470" class="label">持久化写入</text>
+  <text x="790" y="502" class="text">StorageLogWriter</text>
+  <text x="790" y="528" class="small">WAL spool 入队</text>
+  <text x="790" y="554" class="small">后台 ThreadPool 刷写</text>
+  <text x="790" y="580" class="small">高压时可能短暂等待容量</text>
+
+  <rect x="390" y="460" width="280" height="170" class="card"/>
+  <text x="420" y="500" class="label">WAL / Checkpoint</text>
+  <text x="420" y="532" class="text">FileLogWalSpool</text>
+  <text x="420" y="558" class="small">current.wal / current.chk</text>
+  <text x="420" y="584" class="small">保证崩溃恢复与顺序写入</text>
+
+  <rect x="80" y="470" width="250" height="170" class="card"/>
+  <text x="110" y="510" class="label">文件后端</text>
+  <text x="110" y="542" class="text">TextFileLogStorageBackend</text>
+  <text x="110" y="568" class="text">CsvFileLogStorageBackend</text>
+  <text x="110" y="594" class="small">WriteBatch → FileStream / StreamWriter</text>
+
+  <rect x="80" y="700" width="1450" height="120" class="card"/>
+  <text x="110" y="742" class="label">落盘结果</text>
+  <text x="110" y="772" class="text">按滚动策略输出到 Logs\\{loggerName}\\YYYYMMDD.log 或 csv；保留期清理由 retention 逻辑处理</text>
+  <text x="110" y="802" class="small">当前实现中，真正的文件 I/O 主要在后台 worker 中完成，不在业务线程直接做</text>
+
+  <!-- arrows -->
+  <path d="M 330 260 L 390 260" class="solid"/>
+  <path d="M 670 260 L 760 260" class="accent"/>
+
+  <path d="M 1080 215 L 1135 170" class="solid"/>
+  <path d="M 1080 245 L 1135 445" class="solid"/>
+  <path d="M 1080 295 L 1135 205" class="solid"/>
+
+  <path d="M 1135 155 L 1040 155" class="fine"/>
+  <path d="M 1135 505 L 1040 505" class="dashed"/>
+
+  <path d="M 760 540 L 670 540" class="accent"/>
+  <path d="M 390 545 L 330 545" class="solid"/>
+
+  <path d="M 205 640 L 205 700" class="solid"/>
+  <path d="M 550 630 L 550 700" class="solid"/>
+  <path d="M 920 650 L 920 700" class="solid"/>
+  <path d="M 1320 530 L 1320 700" class="solid"/>
+
+  <!-- legend -->
+  <rect x="1180" y="620" width="320" height="60" rx="14" ry="14" fill="#0f172a" stroke="#334155"/>
+  <line x1="1205" y1="650" x2="1265" y2="650" class="solid"/>
+  <text x="1280" y="655" class="small">同步调用</text>
+  <line x1="1370" y1="650" x2="1430" y2="650" class="dashed"/>
+  <text x="1445" y="655" class="small">后台异步</text>
+
+  <text x="80" y="872" class="note">说明：LogStore / LogSessionBuffer 负责内存视图与会话数据，StorageLogWriter 负责最终持久化，CompositeLogger / MergedLogger 负责组合与分发。</text>
+</svg>
