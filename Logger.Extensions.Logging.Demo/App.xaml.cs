@@ -1,12 +1,9 @@
 using System;
-using System.IO;
 using System.Windows;
 using Logger.Core;
-using Logger.Core.Models;
 using Logger.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using CoreLogLevel = Logger.Core.Models.LogLevel;
 
 namespace Logger.Extensions.Logging.Demo
 {
@@ -22,14 +19,6 @@ namespace Logger.Extensions.Logging.Demo
             base.OnStartup(e);
 
             ServiceCollection services = new ServiceCollection();
-            services.AddLoggerCore(options =>
-            {
-                options.LogRootDirectoryPath = Path.Combine(AppContext.BaseDirectory, "logs");
-                options.SpoolRootDirectoryPath = Path.Combine(AppContext.BaseDirectory, "spool");
-                options.MinimumLevel = CoreLogLevel.Trace;
-                options.RollingMode = LogFileRollingMode.Day;
-                options.RollingRetentionDays = 7;
-            });
             services.AddLogging(builder =>
             {
                 builder.ClearProviders();

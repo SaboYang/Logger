@@ -1,5 +1,4 @@
 using System;
-using Logger.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -14,6 +13,7 @@ namespace Logger.Extensions.Logging
                 throw new ArgumentNullException(nameof(builder));
             }
 
+            LoggerCoreRegistration.AddCoreServices(builder.Services, new LoggerCoreOptions());
             builder.Services.AddSingleton<ILoggerProvider, LoggerCoreLoggerProvider>();
             return builder;
         }
