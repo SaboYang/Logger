@@ -27,6 +27,7 @@ namespace Logger.WinForms.Demo
         private readonly Button _sampleButton;
         private readonly Button _stressButton;
         private readonly Button _openWpfHostButton;
+        private readonly Button _openWpfTextHostButton;
         private readonly Button _openFactoryDemoButton;
         private readonly Button _openConfigDemoButton;
         private readonly Button _openFileDemoButton;
@@ -67,7 +68,7 @@ namespace Logger.WinForms.Demo
             {
                 Dock = DockStyle.Top,
                 AutoSize = true,
-                ColumnCount = 12,
+                ColumnCount = 13,
                 RowCount = 1,
                 Margin = new Padding(0, 0, 0, 10)
             };
@@ -82,6 +83,7 @@ namespace Logger.WinForms.Demo
             toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             toolbar.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
 
             _sampleButton = new Button
@@ -116,6 +118,17 @@ namespace Logger.WinForms.Demo
                 UseVisualStyleBackColor = true
             };
             _openWpfHostButton.Click += OpenWpfHostButton_Click;
+
+            _openWpfTextHostButton = new Button
+            {
+                AutoSize = true,
+                Height = 34,
+                Margin = new Padding(0, 0, 12, 0),
+                Padding = new Padding(12, 0, 12, 0),
+                Text = "打开 WPF 文本宿主",
+                UseVisualStyleBackColor = true
+            };
+            _openWpfTextHostButton.Click += OpenWpfTextHostButton_Click;
 
             _openFactoryDemoButton = new Button
             {
@@ -248,14 +261,15 @@ logger.Error(""line1\r\nline2"");"
             toolbar.Controls.Add(_sampleButton, 0, 0);
             toolbar.Controls.Add(_stressButton, 1, 0);
             toolbar.Controls.Add(_openWpfHostButton, 2, 0);
-            toolbar.Controls.Add(_openFactoryDemoButton, 3, 0);
-            toolbar.Controls.Add(_openConfigDemoButton, 4, 0);
-            toolbar.Controls.Add(_openFileDemoButton, 5, 0);
-            toolbar.Controls.Add(_openStorageDemoButton, 6, 0);
-            toolbar.Controls.Add(_openMemoryMetricsDemoButton, 7, 0);
-            toolbar.Controls.Add(countLabel, 8, 0);
-            toolbar.Controls.Add(_stressCountInput, 9, 0);
-            toolbar.Controls.Add(_statusLabel, 11, 0);
+            toolbar.Controls.Add(_openWpfTextHostButton, 3, 0);
+            toolbar.Controls.Add(_openFactoryDemoButton, 4, 0);
+            toolbar.Controls.Add(_openConfigDemoButton, 5, 0);
+            toolbar.Controls.Add(_openFileDemoButton, 6, 0);
+            toolbar.Controls.Add(_openStorageDemoButton, 7, 0);
+            toolbar.Controls.Add(_openMemoryMetricsDemoButton, 8, 0);
+            toolbar.Controls.Add(countLabel, 9, 0);
+            toolbar.Controls.Add(_stressCountInput, 10, 0);
+            toolbar.Controls.Add(_statusLabel, 12, 0);
 
             rootLayout.Controls.Add(toolbar, 0, 0);
             rootLayout.Controls.Add(infoLabel, 0, 1);
@@ -313,6 +327,13 @@ logger.Error(""line1\r\nline2"");"
             hostForm.Show(this);
             _logger.Info("已打开一个承载封装版 WPF 日志控件的 WinForms 宿主窗体。");
             UpdateStatus("已打开 WPF 宿主窗体");
+        }
+
+        private void OpenWpfTextHostButton_Click(object sender, EventArgs e)
+        {
+            WpfTextHostForm hostForm = new WpfTextHostForm();
+            hostForm.Show(this);
+            UpdateStatus("宸叉墦寮€ WPF 鏂囨湰瀹夸富绐椾綋");
         }
 
         private void OpenFactoryDemoButton_Click(object sender, EventArgs e)
@@ -447,6 +468,7 @@ logger.Error(""line1\r\nline2"");"
             _sampleButton.Enabled = enabled;
             _stressButton.Enabled = enabled;
             _openWpfHostButton.Enabled = enabled;
+            _openWpfTextHostButton.Enabled = enabled;
             _openFactoryDemoButton.Enabled = enabled;
             _openConfigDemoButton.Enabled = enabled;
             _openFileDemoButton.Enabled = enabled;

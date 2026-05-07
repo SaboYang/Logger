@@ -53,6 +53,17 @@ namespace Logger.WinForms.Demo
                 return;
             }
 
+            if (options.OpenWpfTextHost)
+            {
+                using (WpfTextHostForm hostForm = new WpfTextHostForm(options.StressLogCount, options.AutoRunStressTest, options.CloseAfterStressTest))
+                {
+                    Application.Run(hostForm);
+                    Environment.ExitCode = hostForm.AutoTestSucceeded == false ? 1 : 0;
+                }
+
+                return;
+            }
+
             Application.Run(new MainForm());
         }
 
@@ -63,6 +74,8 @@ namespace Logger.WinForms.Demo
             public bool CloseAfterStressTest { get; private set; }
 
             public bool OpenWpfHost { get; private set; }
+
+            public bool OpenWpfTextHost { get; private set; }
 
             public bool OpenFactoryDemo { get; private set; }
 
@@ -89,6 +102,15 @@ namespace Logger.WinForms.Demo
                     if (string.Equals(arg, "--wpf-host", StringComparison.OrdinalIgnoreCase))
                     {
                         options.OpenWpfHost = true;
+                    }
+                    else if (string.Equals(arg, "--wpf-text-host", StringComparison.OrdinalIgnoreCase))
+                    {
+                        options.OpenWpfTextHost = true;
+                    }
+                    else if (string.Equals(arg, "--wpf-text-stress", StringComparison.OrdinalIgnoreCase))
+                    {
+                        options.OpenWpfTextHost = true;
+                        options.AutoRunStressTest = true;
                     }
                     else if (string.Equals(arg, "--factory-demo", StringComparison.OrdinalIgnoreCase) ||
                              string.Equals(arg, "--log-manager-demo", StringComparison.OrdinalIgnoreCase))
