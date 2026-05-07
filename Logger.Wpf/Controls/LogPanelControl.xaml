@@ -28,7 +28,7 @@
         </LinearGradientBrush>
 
         <SolidColorBrush x:Key="LogSurfaceBrush" Color="#FFFFFFFF" />
-        <SolidColorBrush x:Key="LogRowBrush" Color="#FFF8FAFC" />
+        <SolidColorBrush x:Key="LogRowBrush" Color="#FFFFFFFF" />
 
         <Style x:Key="HeaderActionButtonStyle" TargetType="Button">
             <Setter Property="MinWidth" Value="68" />
@@ -284,7 +284,7 @@
 
             <Border Grid.Row="2"
                     Background="{StaticResource LogSurfaceBrush}"
-                    BorderBrush="#FF1E293B"
+                    BorderBrush="#FFE5E7EB"
                     BorderThickness="1"
                     CornerRadius="8"
                     Padding="4">
@@ -306,9 +306,8 @@
                                         Margin="0,0,0,2"
                                         Padding="4,3"
                                         Background="{StaticResource LogRowBrush}"
-                                        BorderBrush="#FF1F2D40"
-                                        BorderThickness="1"
-                                        CornerRadius="6"
+                                        BorderBrush="Transparent"
+                                        BorderThickness="0"
                                         ToolTip="{Binding Message}">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
@@ -357,11 +356,9 @@
                                 <DataTemplate.Triggers>
                                     <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
                                         <Setter TargetName="ItemBorder" Property="Background" Value="#FFF1F5F9" />
-                                        <Setter TargetName="ItemBorder" Property="BorderBrush" Value="#FFCBD5E1" />
                                     </DataTrigger>
                                     <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
                                         <Setter TargetName="ItemBorder" Property="Background" Value="#FFEFF6FF" />
-                                        <Setter TargetName="ItemBorder" Property="BorderBrush" Value="#FF93C5FD" />
                                         <Setter TargetName="LevelBadge" Property="Background" Value="#FFF8FBFF" />
                                         <Setter TargetName="LevelBadge" Property="BorderBrush" Value="#FFBFDBFE" />
                                         <Setter TargetName="TimeText" Property="Foreground" Value="#FF334155" />
