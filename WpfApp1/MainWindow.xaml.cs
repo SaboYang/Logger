@@ -1,19 +1,16 @@
-using Microsoft.Win32;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using Logger.Core;
 using Logger.Core.Models;
 
 namespace WpfApp1
 {
     /// <summary>
-    /// MainWindow.xaml 的交互逻辑
+    /// 主窗口的交互逻辑。
     /// </summary>
     #if NET8_0_OR_GREATER
     [System.Runtime.Versioning.SupportedOSPlatform("windows7.0")]
@@ -25,6 +22,9 @@ namespace WpfApp1
         private readonly ILoggerOutput _logger = LogManager.GetLogger("WpfApp1.MainWindow");
         private bool _isStressRunning;
 
+        /// <summary>
+        /// 初始化主窗口，并绑定日志输出源。
+        /// </summary>
         public MainWindow()
         {
             InitializeComponent();
@@ -35,11 +35,11 @@ namespace WpfApp1
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             SetStatus("准备就绪");
-            _logger.Success("日志控件已就绪。");
+            _logger.Success("日志文本框已就绪。");
             _logger.Info("当前支持等级：TRACE / DEBUG / INFO / SUCCESS / WARN / ERROR / FATAL。");
-            _logger.Info("当前窗口通过 Logger.Core 接口向 WPF 日志控件输出内容。");
+            _logger.Info("窗口通过 Logger.Core 接口向 WPF 文本框日志页输出内容。");
             WriteLogFilePath();
-            _logger.Info("点击“日志压力测试”可批量写入日志。");
+            _logger.Info("点击“查看日志”可以切换到日志页。");
         }
 
         private void WriteLogFilePath()
@@ -67,11 +67,11 @@ namespace WpfApp1
 
             try
             {
-                var st = Stopwatch.StartNew();
+                Stopwatch stopwatch = Stopwatch.StartNew();
                 _logger.Info($"开始压力测试，本次准备写入 {StressLogCount} 条日志。");
                 await Task.Run(() => ProduceStressLogs(StressLogCount));
                 _logger.Success("压力测试完成。");
-                SetStatus($"压力测试完成，共写入 {StressLogCount} 条日志,完成时间：{st.Elapsed}");
+                SetStatus($"压力测试完成，共写入 {StressLogCount} 条日志，耗时 {stopwatch.Elapsed}。");
             }
             catch (Exception ex)
             {
@@ -89,7 +89,7 @@ namespace WpfApp1
         {
             Random random = new Random();
             const int batchSize = 200;
-            var batch = new System.Collections.Generic.List<LogEntry>(batchSize);
+            List<LogEntry> batch = new List<LogEntry>(batchSize);
 
             for (int index = 1; index <= totalCount; index++)
             {
@@ -98,7 +98,7 @@ namespace WpfApp1
                 if (batch.Count == batchSize || index == totalCount)
                 {
                     _logger.AddLogs(batch);
-                    batch = new System.Collections.Generic.List<LogEntry>(batchSize);
+                    batch = new List<LogEntry>(batchSize);
                 }
 
                 if (index % 1000 == 0 || index == totalCount)
@@ -110,38 +110,23 @@ namespace WpfApp1
 
         private LogEntry BuildStressEntry(int index, Random random)
         {
-            int remainder = index % 7;
-            if (remainder == 1)
+            switch (index % 7)
             {
-                return new LogEntry(DateTime.Now, LogLevel.Trace, $"[#{index:00000}] TRACE 模拟链路追踪，游标位置 {random.Next(1, 9999)}。");
+                case 1:
+                    return new LogEntry(DateTime.Now, LogLevel.Trace, $"[#{index:00000}] TRACE 模拟链路追踪，游标位置 {random.Next(1, 9999)}。");
+                case 2:
+                    return new LogEntry(DateTime.Now, LogLevel.Debug, $"[#{index:00000}] DEBUG 模拟诊断数据，批次 {index / 25 + 1}。");
+                case 3:
+                    return new LogEntry(DateTime.Now, LogLevel.Info, $"[#{index:00000}] INFO 模拟业务消息，耗时 {random.Next(5, 60)} ms。");
+                case 4:
+                    return new LogEntry(DateTime.Now, LogLevel.Success, $"[#{index:00000}] SUCCESS 模拟操作完成，写入记录 {random.Next(1, 80)} 条。");
+                case 5:
+                    return new LogEntry(DateTime.Now, LogLevel.Warn, $"[#{index:00000}] WARN 模拟波动告警，队列长度 {random.Next(10, 500)}。");
+                case 6:
+                    return new LogEntry(DateTime.Now, LogLevel.Error, $"[#{index:00000}] ERROR 模拟异常告警，重试次数 {random.Next(1, 6)}。");
+                default:
+                    return new LogEntry(DateTime.Now, LogLevel.Fatal, $"[#{index:00000}] FATAL 模拟严重故障，任务已进入熔断。");
             }
-
-            if (remainder == 2)
-            {
-                return new LogEntry(DateTime.Now, LogLevel.Debug, $"[#{index:00000}] DEBUG 模拟诊断数据，批次 {index / 25 + 1}。");
-            }
-
-            if (remainder == 3)
-            {
-                return new LogEntry(DateTime.Now, LogLevel.Info, $"[#{index:00000}] INFO 模拟业务消息，耗时 {random.Next(5, 60)} ms。");
-            }
-
-            if (remainder == 4)
-            {
-                return new LogEntry(DateTime.Now, LogLevel.Success, $"[#{index:00000}] SUCCESS 模拟操作完成，写入记录 {random.Next(1, 80)} 条。");
-            }
-
-            if (remainder == 5)
-            {
-                return new LogEntry(DateTime.Now, LogLevel.Warn, $"[#{index:00000}] WARN 模拟波动告警，队列长度 {random.Next(10, 500)}。");
-            }
-
-            if (remainder == 6)
-            {
-                return new LogEntry(DateTime.Now, LogLevel.Error, $"[#{index:00000}] ERROR 模拟异常告警，重试次数 {random.Next(1, 6)}。");
-            }
-
-            return new LogEntry(DateTime.Now, LogLevel.Fatal, $"[#{index:00000}] FATAL 模拟严重故障，任务已进入熔断。");
         }
 
         private void PostStatus(string text)
@@ -155,4 +140,3 @@ namespace WpfApp1
         }
     }
 }
-
