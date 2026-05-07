@@ -69,7 +69,7 @@ namespace Logger.WinForms.Controls
 
         public LogPanelControl()
         {
-            BackColor = Color.FromArgb(248, 250, 252);
+            BackColor = Color.White;
             BorderStyle = BorderStyle.FixedSingle;
             Padding = new Padding(8);
 
@@ -488,9 +488,9 @@ namespace Logger.WinForms.Controls
                 RowHeadersVisible = false,
                 MultiSelect = false,
                 ClipboardCopyMode = DataGridViewClipboardCopyMode.Disable,
-                BackgroundColor = Color.FromArgb(17, 24, 39),
+                BackgroundColor = Color.White,
                 BorderStyle = BorderStyle.None,
-                GridColor = Color.FromArgb(31, 41, 55),
+                GridColor = Color.FromArgb(229, 231, 235),
                 CellBorderStyle = DataGridViewCellBorderStyle.None,
                 ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None,
                 EnableHeadersVisualStyles = false,
@@ -504,10 +504,10 @@ namespace Logger.WinForms.Controls
 
             grid.DefaultCellStyle = new DataGridViewCellStyle
             {
-                BackColor = Color.FromArgb(17, 24, 39),
-                ForeColor = Color.FromArgb(249, 250, 251),
-                SelectionBackColor = Color.FromArgb(17, 24, 39),
-                SelectionForeColor = Color.FromArgb(249, 250, 251),
+                BackColor = Color.White,
+                ForeColor = Color.FromArgb(15, 23, 42),
+                SelectionBackColor = Color.FromArgb(239, 246, 255),
+                SelectionForeColor = Color.FromArgb(15, 23, 42),
                 Font = new Font("Consolas", 9F, FontStyle.Regular, GraphicsUnit.Point),
                 WrapMode = DataGridViewTriState.False,
                 Padding = new Padding(0, 2, 0, 2)
@@ -631,8 +631,8 @@ namespace Logger.WinForms.Controls
                 return;
             }
 
-            e.CellStyle.BackColor = Color.FromArgb(17, 24, 39);
-            e.CellStyle.SelectionBackColor = Color.FromArgb(17, 24, 39);
+            e.CellStyle.BackColor = Color.White;
+            e.CellStyle.SelectionBackColor = Color.FromArgb(239, 246, 255);
 
             if (e.ColumnIndex == 0)
             {
@@ -650,7 +650,7 @@ namespace Logger.WinForms.Controls
             }
             else
             {
-                e.CellStyle.ForeColor = Color.FromArgb(249, 250, 251);
+                e.CellStyle.ForeColor = Color.FromArgb(15, 23, 42);
                 e.CellStyle.SelectionForeColor = e.CellStyle.ForeColor;
                 e.CellStyle.Font = _logGrid.DefaultCellStyle.Font;
                 e.CellStyle.WrapMode = _highThroughputMode
