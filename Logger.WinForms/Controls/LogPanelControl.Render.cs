@@ -164,6 +164,7 @@ namespace Logger.WinForms.Controls
             _levelFont = new Font("Consolas", 9F, FontStyle.Bold, GraphicsUnit.Point);
             _logGrid.CellFormatting += LogGrid_CellFormatting;
             _logGrid.CellValueNeeded += LogGrid_CellValueNeeded;
+            _logGrid.CellToolTipTextNeeded += LogGrid_CellToolTipTextNeeded;
 
             _actionPanel.Controls.Add(_searchTextBox);
             _actionPanel.Controls.Add(_filterButton);
@@ -459,6 +460,7 @@ namespace Logger.WinForms.Controls
                 _clearButton.Click -= ClearButton_Click;
                 _logGrid.CellFormatting -= LogGrid_CellFormatting;
                 _logGrid.CellValueNeeded -= LogGrid_CellValueNeeded;
+                _logGrid.CellToolTipTextNeeded -= LogGrid_CellToolTipTextNeeded;
                 foreach (ToolStripMenuItem item in _filterMenuItems.Values)
                 {
                     item.Click -= FilterMenuItem_Click;
@@ -621,6 +623,22 @@ namespace Logger.WinForms.Controls
             }
 
             e.Value = NormalizeDisplayMessage(entry.Message);
+        }
+
+        private void LogGrid_CellToolTipTextNeeded(object sender, DataGridViewCellToolTipTextNeededEventArgs e)
+        {
+            if (e.ColumnIndex != 2)
+            {
+                return;
+            }
+
+            LogEntry entry = GetVisibleEntry(e.RowIndex);
+            if (entry == null)
+            {
+                return;
+            }
+
+            e.ToolTipText = FormatEntryTooltipText(entry);
         }
 
         private void LogGrid_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
@@ -1393,6 +1411,20 @@ namespace Logger.WinForms.Controls
                 entry.Message ?? string.Empty);
         }
 
+        private static string FormatEntryTooltipText(LogEntry entry)
+        {
+            if (entry == null)
+            {
+                return string.Empty;
+            }
+
+            return string.Format(
+                "{0:yyyy-MM-dd HH:mm:ss.fff} [{1}] {2}",
+                entry.Timestamp,
+                entry.LevelText,
+                NormalizeTooltipMessage(entry.Message));
+        }
+
         private static string NormalizeSearchText(string searchText)
         {
             return string.IsNullOrWhiteSpace(searchText) ? string.Empty : searchText.Trim();
@@ -1402,6 +1434,18 @@ namespace Logger.WinForms.Controls
         {
             return !string.IsNullOrEmpty(source) &&
                    source.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        private static string NormalizeTooltipMessage(string message)
+        {
+            if (string.IsNullOrEmpty(message))
+            {
+                return string.Empty;
+            }
+
+            return message.Replace("\r\n", "\n")
+                          .Replace("\r", "\n")
+                          .Replace("\n", Environment.NewLine);
         }
 
         private static Color GetLevelColor(LogLevel level)
