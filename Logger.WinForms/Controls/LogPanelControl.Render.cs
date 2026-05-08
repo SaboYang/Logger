@@ -164,6 +164,7 @@ namespace Logger.WinForms.Controls
             _levelFont = new Font("Consolas", 9F, FontStyle.Bold, GraphicsUnit.Point);
             _logGrid.CellFormatting += LogGrid_CellFormatting;
             _logGrid.CellValueNeeded += LogGrid_CellValueNeeded;
+            _logGrid.CellDoubleClick += LogGrid_CellDoubleClick;
             _logGrid.CellToolTipTextNeeded += LogGrid_CellToolTipTextNeeded;
 
             _actionPanel.Controls.Add(_searchTextBox);
@@ -460,6 +461,7 @@ namespace Logger.WinForms.Controls
                 _clearButton.Click -= ClearButton_Click;
                 _logGrid.CellFormatting -= LogGrid_CellFormatting;
                 _logGrid.CellValueNeeded -= LogGrid_CellValueNeeded;
+                _logGrid.CellDoubleClick -= LogGrid_CellDoubleClick;
                 _logGrid.CellToolTipTextNeeded -= LogGrid_CellToolTipTextNeeded;
                 foreach (ToolStripMenuItem item in _filterMenuItems.Values)
                 {
@@ -639,6 +641,34 @@ namespace Logger.WinForms.Controls
             }
 
             e.ToolTipText = FormatEntryTooltipText(entry);
+        }
+
+        private void LogGrid_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0)
+            {
+                return;
+            }
+
+            LogEntry entry = GetVisibleEntry(e.RowIndex);
+            if (entry == null)
+            {
+                return;
+            }
+
+            using (CellContentDialog dialog = new CellContentDialog(entry))
+            {
+                Form owner = FindForm();
+                if (owner != null)
+                {
+                    dialog.StartPosition = FormStartPosition.CenterParent;
+                    dialog.ShowDialog(owner);
+                    return;
+                }
+
+                dialog.StartPosition = FormStartPosition.CenterScreen;
+                dialog.ShowDialog();
+            }
         }
 
         private void LogGrid_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
@@ -1446,6 +1476,91 @@ namespace Logger.WinForms.Controls
             return message.Replace("\r\n", "\n")
                           .Replace("\r", "\n")
                           .Replace("\n", Environment.NewLine);
+        }
+
+        private sealed class CellContentDialog : Form
+        {
+            public CellContentDialog(LogEntry entry)
+            {
+                Text = "日志详情";
+                StartPosition = FormStartPosition.CenterParent;
+                MinimumSize = new Size(640, 420);
+                ClientSize = new Size(820, 560);
+                Font = new Font("Microsoft YaHei UI", 9F, FontStyle.Regular, GraphicsUnit.Point);
+                BackColor = Color.White;
+                FormBorderStyle = FormBorderStyle.SizableToolWindow;
+                MaximizeBox = false;
+                MinimizeBox = false;
+                ShowIcon = false;
+                ShowInTaskbar = false;
+
+                Label timestampLabel = new Label
+                {
+                    Dock = DockStyle.Top,
+                    Height = 24,
+                    Padding = new Padding(12, 0, 12, 0),
+                    Text = string.Format("时间: {0:yyyy-MM-dd HH:mm:ss.fff}", entry.Timestamp),
+                    ForeColor = Color.FromArgb(55, 65, 81)
+                };
+
+                Label levelLabel = new Label
+                {
+                    Dock = DockStyle.Top,
+                    Height = 24,
+                    Padding = new Padding(12, 0, 12, 0),
+                    Text = "等级: " + (entry.LevelText ?? string.Empty),
+                    ForeColor = GetLevelColor(entry.Level)
+                };
+
+                TextBox contentTextBox = new TextBox
+                {
+                    Dock = DockStyle.Fill,
+                    BorderStyle = BorderStyle.FixedSingle,
+                    ReadOnly = true,
+                    Multiline = true,
+                    ScrollBars = ScrollBars.Both,
+                    WordWrap = false,
+                    Font = new Font("Consolas", 9F, FontStyle.Regular, GraphicsUnit.Point),
+                    BackColor = Color.White,
+                    ForeColor = Color.FromArgb(15, 23, 42),
+                    Text = NormalizeTooltipMessage(entry.Message)
+                };
+
+                Button closeButton = new Button
+                {
+                    Text = "关闭",
+                    Width = 88,
+                    Height = 30,
+                    Anchor = AnchorStyles.Right | AnchorStyles.Bottom,
+                    DialogResult = DialogResult.OK
+                };
+
+                Panel bottomPanel = new Panel
+                {
+                    Dock = DockStyle.Bottom,
+                    Height = 48,
+                    Padding = new Padding(0, 8, 12, 8),
+                    BackColor = Color.White
+                };
+                bottomPanel.Controls.Add(closeButton);
+
+                closeButton.Location = new Point(bottomPanel.Width - closeButton.Width - 12, 8);
+                closeButton.Click += delegate { Close(); };
+                bottomPanel.Resize += delegate
+                {
+                    closeButton.Location = new Point(
+                        Math.Max(12, bottomPanel.ClientSize.Width - closeButton.Width - 12),
+                        8);
+                };
+
+                AcceptButton = closeButton;
+                CancelButton = closeButton;
+
+                Controls.Add(contentTextBox);
+                Controls.Add(bottomPanel);
+                Controls.Add(levelLabel);
+                Controls.Add(timestampLabel);
+            }
         }
 
         private static Color GetLevelColor(LogLevel level)

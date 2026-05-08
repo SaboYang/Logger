@@ -294,6 +294,7 @@
                              BorderThickness="0"
                              Foreground="#FFF8FAFC"
                              HorizontalContentAlignment="Stretch"
+                             MouseDoubleClick="LogList_MouseDoubleClick"
                              SelectionMode="Single"
                              ScrollViewer.CanContentScroll="True"
                              ScrollViewer.HorizontalScrollBarVisibility="Disabled"

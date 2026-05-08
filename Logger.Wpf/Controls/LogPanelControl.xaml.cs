@@ -4,6 +4,8 @@ using System.Collections.Specialized;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
 using Logger.Core;
 using Logger.Core.Models;
@@ -489,6 +491,26 @@ namespace Logger.Wpf.Controls
             CopyLogs();
         }
 
+        private void LogList_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            ListBoxItem item = ItemsControl.ContainerFromElement(LogList, e.OriginalSource as DependencyObject) as ListBoxItem;
+            LogEntry entry = item != null ? item.DataContext as LogEntry : LogList.SelectedItem as LogEntry;
+            if (entry == null)
+            {
+                return;
+            }
+
+            Window owner = Window.GetWindow(this);
+            LogEntryDetailWindow detailWindow = new LogEntryDetailWindow(entry)
+            {
+                Owner = owner,
+                WindowStartupLocation = owner != null ? WindowStartupLocation.CenterOwner : WindowStartupLocation.CenterScreen
+            };
+
+            detailWindow.ShowDialog();
+            e.Handled = true;
+        }
+
         private void FilterButton_Click(object sender, RoutedEventArgs e)
         {
             if (_filterMenu == null)
@@ -721,6 +743,41 @@ namespace Logger.Wpf.Controls
                 entry.Message ?? string.Empty);
         }
 
+        private static string FormatTimestamp(LogEntry entry)
+        {
+            return entry == null ? string.Empty : entry.Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff");
+        }
+
+        private static Brush GetLevelBrush(LogLevel level)
+        {
+            switch (level)
+            {
+                case LogLevel.Trace:
+                    return CreateBrush(148, 163, 184);
+                case LogLevel.Debug:
+                    return CreateBrush(96, 165, 250);
+                case LogLevel.Info:
+                    return CreateBrush(15, 23, 42);
+                case LogLevel.Success:
+                    return CreateBrush(22, 163, 74);
+                case LogLevel.Warn:
+                    return CreateBrush(217, 119, 6);
+                case LogLevel.Error:
+                    return CreateBrush(220, 38, 38);
+                case LogLevel.Fatal:
+                    return CreateBrush(185, 28, 28);
+                default:
+                    return CreateBrush(15, 23, 42);
+            }
+        }
+
+        private static Brush CreateBrush(byte red, byte green, byte blue)
+        {
+            SolidColorBrush brush = new SolidColorBrush(Color.FromRgb(red, green, blue));
+            brush.Freeze();
+            return brush;
+        }
+
         private static string NormalizeSearchText(string searchText)
         {
             return string.IsNullOrWhiteSpace(searchText) ? string.Empty : searchText.Trim();
@@ -730,6 +787,102 @@ namespace Logger.Wpf.Controls
         {
             return !string.IsNullOrEmpty(source) &&
                    source.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        private sealed class LogEntryDetailWindow : Window
+        {
+            public LogEntryDetailWindow(LogEntry entry)
+            {
+                Title = "日志详情";
+                Width = 820;
+                Height = 560;
+                MinWidth = 640;
+                MinHeight = 420;
+                Background = Brushes.White;
+                FontFamily = new FontFamily("Microsoft YaHei UI");
+                FontSize = 13;
+                ResizeMode = ResizeMode.CanResize;
+                WindowStyle = WindowStyle.ToolWindow;
+                ShowInTaskbar = false;
+
+                DockPanel root = new DockPanel
+                {
+                    Margin = new Thickness(16),
+                    LastChildFill = true
+                };
+
+                Label timestampLabel = new Label
+                {
+                    Content = string.Format("时间: {0}", FormatTimestamp(entry)),
+                    Foreground = new SolidColorBrush(Color.FromRgb(55, 65, 81)),
+                    Padding = new Thickness(0, 0, 0, 2),
+                    Margin = new Thickness(0)
+                };
+
+                Label levelLabel = new Label
+                {
+                    Content = string.Format("等级: {0}", entry != null ? entry.LevelText : string.Empty),
+                    Foreground = GetLevelBrush(entry != null ? entry.Level : LogLevel.Info),
+                    Padding = new Thickness(0),
+                    Margin = new Thickness(0)
+                };
+
+                TextBox messageTextBox = new TextBox
+                {
+                    Text = entry != null ? entry.Message ?? string.Empty : string.Empty,
+                    IsReadOnly = true,
+                    AcceptsReturn = true,
+                    AcceptsTab = true,
+                    TextWrapping = TextWrapping.NoWrap,
+                    HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
+                    VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+                    FontFamily = new FontFamily("Consolas"),
+                    FontSize = 12,
+                    Background = Brushes.White,
+                    Foreground = new SolidColorBrush(Color.FromRgb(15, 23, 42)),
+                    BorderBrush = new SolidColorBrush(Color.FromRgb(229, 231, 235)),
+                    BorderThickness = new Thickness(1),
+                    Padding = new Thickness(8)
+                };
+
+                StackPanel buttonPanel = new StackPanel
+                {
+                    Orientation = Orientation.Horizontal,
+                    HorizontalAlignment = HorizontalAlignment.Right,
+                    Margin = new Thickness(0, 12, 0, 0)
+                };
+
+                Button closeButton = new Button
+                {
+                    Content = "关闭",
+                    MinWidth = 88,
+                    Height = 30,
+                    Margin = new Thickness(0, 12, 0, 0),
+                    Padding = new Thickness(16, 0, 16, 0),
+                    Background = new SolidColorBrush(Color.FromRgb(255, 255, 255)),
+                    Foreground = new SolidColorBrush(Color.FromRgb(15, 23, 42)),
+                    BorderBrush = new SolidColorBrush(Color.FromRgb(217, 226, 236))
+                };
+                closeButton.Click += delegate { Close(); };
+                buttonPanel.Children.Add(closeButton);
+
+                StackPanel headerPanel = new StackPanel
+                {
+                    Orientation = Orientation.Vertical,
+                    Margin = new Thickness(0, 0, 0, 12)
+                };
+                headerPanel.Children.Add(timestampLabel);
+                headerPanel.Children.Add(levelLabel);
+
+                DockPanel.SetDock(buttonPanel, Dock.Bottom);
+                DockPanel.SetDock(headerPanel, Dock.Top);
+
+                root.Children.Add(buttonPanel);
+                root.Children.Add(headerPanel);
+                root.Children.Add(messageTextBox);
+
+                Content = root;
+            }
         }
     }
 }
