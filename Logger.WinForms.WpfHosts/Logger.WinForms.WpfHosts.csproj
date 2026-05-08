@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+  <PropertyGroup>
+    <TargetFrameworks>net48;net8.0-windows</TargetFrameworks>
+    <UseWindowsForms>true</UseWindowsForms>
+    <UseWPF>true</UseWPF>
+    <PackageId>ZH.Logger.WinForms.WpfHosts</PackageId>
+    <AssemblyName>Logger.WinForms.WpfHosts</AssemblyName>
+    <RootNamespace>Logger.WinForms.WpfHosts</RootNamespace>
+    <ProjectGuid>{A0C6E9AB-8A2A-4F70-9A52-8455A0F784B1}</ProjectGuid>
+    <Description>WinForms WPF hosting bridge controls for the Logger suite.</Description>
+    <PackageReadmeFile>NuGet.README.md</PackageReadmeFile>
+    <LangVersion>7.3</LangVersion>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Logger.WinForms\Controls\WpfLogPanelControl.cs" Link="Controls\WpfLogPanelControl.cs" />
+    <Compile Include="..\Logger.WinForms\Controls\WpfLogTextPanelControl.cs" Link="Controls\WpfLogTextPanelControl.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\NuGet.README.md" Pack="true" PackagePath="" />
+    <ProjectReference Include="..\Logger.Core\Logger.Core.csproj" />
+    <ProjectReference Include="..\Logger.Wpf\Logger.Wpf.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+    <Reference Include="WindowsFormsIntegration" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\LICENSE" Pack="true" PackagePath="" />
+  </ItemGroup>
+</Project>

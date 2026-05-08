@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Logger.WinForms\Logger.WinForms.csproj" />
+    <ProjectReference Include="..\Logger.WinForms.WpfHosts\Logger.WinForms.WpfHosts.csproj" />
   </ItemGroup>
 
   <ItemGroup>
