@@ -27,8 +27,19 @@
             <GradientStop Color="#FF1D4ED8" Offset="1" />
         </LinearGradientBrush>
 
-        <SolidColorBrush x:Key="LogSurfaceBrush" Color="#FFFFFFFF" />
-        <SolidColorBrush x:Key="LogRowBrush" Color="#FFFFFFFF" />
+        <LinearGradientBrush x:Key="LogSurfaceBrush" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="#F7FFFFFF" Offset="0" />
+            <GradientStop Color="#EEF7FAFD" Offset="1" />
+        </LinearGradientBrush>
+        <SolidColorBrush x:Key="LogRowBrush" Color="#F8FFFFFF" />
+        <SolidColorBrush x:Key="LogRowBorderBrush" Color="#40D8E2EC" />
+        <SolidColorBrush x:Key="LogRowHoverBrush" Color="#FCFFFFFF" />
+        <SolidColorBrush x:Key="LogRowSelectedBrush" Color="#F0F8FCFF" />
+        <SolidColorBrush x:Key="LogRowSelectedBorderBrush" Color="#70D2E2F2" />
+        <SolidColorBrush x:Key="LogRowTimestampBrush" Color="#FF6B7280" />
+        <SolidColorBrush x:Key="LogRowMessageBrush" Color="#FF111827" />
+        <SolidColorBrush x:Key="LogRowBadgeBackgroundBrush" Color="#F6FBFEFF" />
+        <SolidColorBrush x:Key="LogRowBadgeBorderBrush" Color="#55D7E2EC" />
 
         <Style x:Key="HeaderActionButtonStyle" TargetType="Button">
             <Setter Property="MinWidth" Value="68" />
@@ -284,15 +295,15 @@
 
             <Border Grid.Row="2"
                     Background="{StaticResource LogSurfaceBrush}"
-                    BorderBrush="#FFE5E7EB"
+                    BorderBrush="#60D8E2EC"
                     BorderThickness="1"
-                    CornerRadius="8"
-                    Padding="4">
+                    CornerRadius="14"
+                    Padding="7">
                 <Grid>
                     <ListBox x:Name="LogList"
                              Background="Transparent"
                              BorderThickness="0"
-                             Foreground="#FFF8FAFC"
+                             Foreground="#FF111827"
                              HorizontalContentAlignment="Stretch"
                              MouseDoubleClick="LogList_MouseDoubleClick"
                              SelectionMode="Single"
@@ -304,51 +315,60 @@
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <Border x:Name="ItemBorder"
-                                        Margin="0,0,0,2"
-                                        Padding="4,3"
+                                        Margin="0,0,0,3"
+                                        Padding="8,5"
                                         Background="{StaticResource LogRowBrush}"
-                                        BorderBrush="Transparent"
-                                        BorderThickness="0"
+                                        BorderBrush="{StaticResource LogRowBorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="11"
                                         ToolTip="{Binding Message}">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="5" />
+                                            <ColumnDefinition Width="10" />
                                             <ColumnDefinition Width="92" />
                                             <ColumnDefinition Width="74" />
                                             <ColumnDefinition Width="*" />
                                         </Grid.ColumnDefinitions>
 
+                                        <Border x:Name="AccentBar"
+                                                Grid.Column="0"
+                                                Background="{Binding Level, Converter={StaticResource LogLevelToBrushConverter}}"
+                                                CornerRadius="11,0,0,11"
+                                                Opacity="1" />
+
                                         <TextBlock x:Name="TimeText"
-                                                   Grid.Column="0"
+                                                   Grid.Column="2"
                                                    Margin="0"
                                                    VerticalAlignment="Top"
                                                    FontFamily="Consolas"
-                                                   FontSize="11"
-                                                   Foreground="#FF64748B"
+                                                   FontSize="11.5"
+                                                   Foreground="{StaticResource LogRowTimestampBrush}"
                                                    Text="{Binding Timestamp, StringFormat={}{0:HH:mm:ss.fff}}" />
 
                                         <Border x:Name="LevelBadge"
-                                                Grid.Column="1"
+                                                Grid.Column="3"
                                                 HorizontalAlignment="Left"
                                                 VerticalAlignment="Top"
-                                                Padding="5,0"
-                                                Background="#FFEFF6FF"
-                                                BorderBrush="#FFD7E2EC"
+                                                Padding="6,1"
+                                                Background="{StaticResource LogRowBadgeBackgroundBrush}"
+                                                BorderBrush="{StaticResource LogRowBadgeBorderBrush}"
                                                 BorderThickness="1"
                                                 CornerRadius="999">
                                             <TextBlock FontFamily="Consolas"
                                                        FontSize="11"
-                                                       FontWeight="Bold"
+                                                       FontWeight="SemiBold"
                                                        Foreground="{Binding Level, Converter={StaticResource LogLevelToBrushConverter}}"
                                                        Text="{Binding LevelText}" />
                                         </Border>
 
                                         <TextBlock x:Name="MessageText"
-                                                   Grid.Column="2"
-                                                   Margin="6,0,0,0"
+                                                   Grid.Column="4"
+                                                   Margin="8,0,0,0"
                                                    FontFamily="Consolas"
-                                                   FontSize="11"
-                                                   Foreground="#FF111827"
-                                                   LineHeight="15"
+                                                   FontSize="12"
+                                                   Foreground="{StaticResource LogRowMessageBrush}"
+                                                   LineHeight="14"
                                                    Text="{Binding Message}"
                                                    TextTrimming="CharacterEllipsis"
                                                    TextWrapping="NoWrap" />
@@ -356,12 +376,14 @@
                                 </Border>
                                 <DataTemplate.Triggers>
                                     <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
-                                        <Setter TargetName="ItemBorder" Property="Background" Value="#FFF1F5F9" />
+                                        <Setter TargetName="ItemBorder" Property="Background" Value="{StaticResource LogRowHoverBrush}" />
+                                        <Setter TargetName="ItemBorder" Property="BorderBrush" Value="#8AD6DFEA" />
                                     </DataTrigger>
                                     <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" Value="True">
-                                        <Setter TargetName="ItemBorder" Property="Background" Value="#FFEFF6FF" />
-                                        <Setter TargetName="LevelBadge" Property="Background" Value="#FFF8FBFF" />
-                                        <Setter TargetName="LevelBadge" Property="BorderBrush" Value="#FFBFDBFE" />
+                                        <Setter TargetName="ItemBorder" Property="Background" Value="{StaticResource LogRowSelectedBrush}" />
+                                        <Setter TargetName="ItemBorder" Property="BorderBrush" Value="{StaticResource LogRowSelectedBorderBrush}" />
+                                        <Setter TargetName="LevelBadge" Property="Background" Value="#F8FCFEFF" />
+                                        <Setter TargetName="LevelBadge" Property="BorderBrush" Value="{StaticResource LogRowSelectedBorderBrush}" />
                                         <Setter TargetName="TimeText" Property="Foreground" Value="#FF334155" />
                                         <Setter TargetName="MessageText" Property="Foreground" Value="#FF0F172A" />
                                     </DataTrigger>

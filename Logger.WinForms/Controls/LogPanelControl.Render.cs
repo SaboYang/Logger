@@ -160,7 +160,7 @@ namespace Logger.WinForms.Controls
             };
 
             _logGrid = BuildLogGrid();
-            _messageColumn = _logGrid.Columns[2] as DataGridViewTextBoxColumn;
+            _messageColumn = _logGrid.Columns[3] as DataGridViewTextBoxColumn;
             _levelFont = new Font("Consolas", 9F, FontStyle.Bold, GraphicsUnit.Point);
             _logGrid.CellFormatting += LogGrid_CellFormatting;
             _logGrid.CellValueNeeded += LogGrid_CellValueNeeded;
@@ -521,6 +521,15 @@ namespace Logger.WinForms.Controls
             grid.RowTemplate.Height = 24;
             grid.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.DisplayedCellsExceptHeaders;
 
+            DataGridViewTextBoxColumn levelBarColumn = new DataGridViewTextBoxColumn
+            {
+                Name = "LevelBar",
+                Width = 5,
+                SortMode = DataGridViewColumnSortMode.NotSortable,
+                ReadOnly = true,
+                Resizable = DataGridViewTriState.False
+            };
+
             DataGridViewTextBoxColumn timestampColumn = new DataGridViewTextBoxColumn
             {
                 Name = "Timestamp",
@@ -554,6 +563,7 @@ namespace Logger.WinForms.Controls
                 Alignment = DataGridViewContentAlignment.TopLeft
             };
 
+            grid.Columns.Add(levelBarColumn);
             grid.Columns.Add(timestampColumn);
             grid.Columns.Add(levelColumn);
             grid.Columns.Add(messageColumn);
@@ -614,11 +624,17 @@ namespace Logger.WinForms.Controls
 
             if (e.ColumnIndex == 0)
             {
-                e.Value = entry.Timestamp.ToString("HH:mm:ss.fff");
+                e.Value = string.Empty;
                 return;
             }
 
             if (e.ColumnIndex == 1)
+            {
+                e.Value = entry.Timestamp.ToString("HH:mm:ss.fff");
+                return;
+            }
+
+            if (e.ColumnIndex == 2)
             {
                 e.Value = entry.LevelText;
                 return;
@@ -629,7 +645,7 @@ namespace Logger.WinForms.Controls
 
         private void LogGrid_CellToolTipTextNeeded(object sender, DataGridViewCellToolTipTextNeededEventArgs e)
         {
-            if (e.ColumnIndex != 2)
+            if (e.ColumnIndex != 3)
             {
                 return;
             }
@@ -684,12 +700,23 @@ namespace Logger.WinForms.Controls
 
             if (e.ColumnIndex == 0)
             {
+                e.CellStyle.BackColor = GetLevelColor(entry.Level);
+                e.CellStyle.SelectionBackColor = e.CellStyle.BackColor;
+                e.CellStyle.ForeColor = e.CellStyle.BackColor;
+                e.CellStyle.SelectionForeColor = e.CellStyle.BackColor;
+                e.CellStyle.Font = _logGrid.DefaultCellStyle.Font;
+                e.CellStyle.WrapMode = DataGridViewTriState.False;
+                return;
+            }
+
+            if (e.ColumnIndex == 1)
+            {
                 e.CellStyle.ForeColor = Color.FromArgb(156, 163, 175);
                 e.CellStyle.SelectionForeColor = e.CellStyle.ForeColor;
                 e.CellStyle.Font = _logGrid.DefaultCellStyle.Font;
                 e.CellStyle.WrapMode = DataGridViewTriState.False;
             }
-            else if (e.ColumnIndex == 1)
+            else if (e.ColumnIndex == 2)
             {
                 e.CellStyle.ForeColor = GetLevelColor(entry.Level);
                 e.CellStyle.SelectionForeColor = e.CellStyle.ForeColor;
