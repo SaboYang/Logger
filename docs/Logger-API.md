@@ -539,6 +539,49 @@ logger.Info("订单服务启动");
 - `CsvFileLogStorageBackendFactory`
 - `LogFileRollingMode.SingleFile / Year / Month / Week / Day / DayWithRetention`
 
+### 10.4 `StorageBackendDemoForm` 里的生成流程
+
+Demo 窗体里的 `CreateLoggerForBackend(...)` 不是简单地“new 一个 logger”，而是按当前界面选择的后端类型，逐步装配出一个可写入的 `ILoggerOutput`。
+
+它的生成过程可以拆成 4 步：
+
+1. 先读取当前选择的 `StorageBackendKind`
+2. 按后端类型创建对应的 `ILogStorageBackendFactory`
+3. 用 `LogStoreLoggerFactory` 包装这个工厂，并调用 `CreateLogger(loggerName)`
+4. 把返回的 logger 绑定到 `logPanel`，同时缓存文件源、会话源或表后端，供右侧预览区使用
+
+对应关系如下：
+
+- `TextFile` 和 `CsvFile`
+  - 生成文件类后端
+  - `LogStoreLoggerFactory` 内部会把日志路由到对应文件写入实现
+  - 如果后端提供 `ILogFileSource`，窗体会把文件路径显示在右侧预览区
+- `SqliteDatabase`
+  - 先创建 `SqliteLogStorageOptions`
+  - 再创建 `SqliteLogStorageBackendFactory`
+  - 最后通过 `LogStoreLoggerFactory.CreateLogger(...)` 得到 SQLite 版本的 `ILoggerOutput`
+  - 右侧预览区改为读取数据库最近记录
+- `SimulatedDatabase`
+  - 创建 `DemoTableLogStorageBackendFactory`
+  - 该工厂会生成一个 `DemoTableLogStorageBackend`
+  - 窗体把 `CurrentBackend` 缓存起来，直接读取内存中的 `DemoTableLogRecord`
+
+可以把它理解成下面这条链路：
+
+```csharp
+StorageBackendKind
+    -> 选择具体的 ILogStorageBackendFactory
+    -> new LogStoreLoggerFactory(factory, minimumLevel)
+    -> CreateLogger(loggerName)
+    -> ILoggerOutput
+```
+
+这里的关键点是：
+
+- `CreateLoggerForBackend(...)` 只负责“装配”，不负责真正写日志
+- 真正写入动作仍然由 `ILogStorageBackend.WriteBatch(...)` 完成
+- Demo 中的预览逻辑只读取后端暴露出来的文件、会话或内存表数据，不直接参与写入
+
 默认文件滚动方式是 `LogFileRollingMode.Day`。
 
 如果本地目录下存在 `Logger.config`，会先按 logger 名称查找配置；找不到该文件或找不到对应名称时，会回退到默认配置。
