@@ -18,14 +18,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="..\Logger.Sqlite\runtimes\win-x64\native\SQLite.Interop.dll">
-      <Link>SQLite.Interop.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Visible>false</Visible>
-    </Content>
-  </ItemGroup>
-
-  <ItemGroup>
     <None Include="Logger.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
