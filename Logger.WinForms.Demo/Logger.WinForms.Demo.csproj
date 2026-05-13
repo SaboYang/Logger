@@ -14,6 +14,15 @@
   <ItemGroup>
     <ProjectReference Include="..\Logger.WinForms\Logger.WinForms.csproj" />
     <ProjectReference Include="..\Logger.WinForms.WpfHosts\Logger.WinForms.WpfHosts.csproj" />
+    <ProjectReference Include="..\Logger.Sqlite\Logger.Sqlite.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\Logger.Sqlite\runtimes\win-x64\native\SQLite.Interop.dll">
+      <Link>SQLite.Interop.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>

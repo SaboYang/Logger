@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using Logger.Core;
 using Logger.Core.Models;
+using Logger.Sqlite;
 using Logger.WinForms.Controls;
 
 namespace Logger.WinForms.Demo
@@ -43,6 +44,8 @@ namespace Logger.WinForms.Demo
         private ILogFileSource _fileSource;
         private ILogSessionSource _sessionSource;
         private DemoTableLogStorageBackend _tableBackend;
+        private SqliteLogStorageOptions _sqliteOptions;
+        private StorageBackendKind _currentBackendKind;
         private int _sequence;
         private bool _isWritingBatch;
 
@@ -101,6 +104,7 @@ namespace Logger.WinForms.Demo
             _backendSelector.Items.Add("CSV 文件后端");
             _backendSelector.Items.Add("自定义表后端（模拟数据库）");
             _backendSelector.SelectedIndex = 0;
+            _backendSelector.Items.Insert(2, "SQLite 数据库后端");
 
             _recreateLoggerButton = CreateToolbarButton("重建日志接口");
             _recreateLoggerButton.Click += RecreateLoggerButton_Click;
@@ -347,6 +351,7 @@ namespace Logger.WinForms.Demo
         private void RecreateLogger()
         {
             StorageBackendKind backendKind = GetSelectedBackendKind();
+            _currentBackendKind = backendKind;
             string loggerName = string.Format(
                 "Logger.WinForms.Demo.Storage.{0}.{1}",
                 backendKind,
@@ -372,19 +377,30 @@ namespace Logger.WinForms.Demo
             {
                 case StorageBackendKind.CsvFile:
                     _tableBackend = null;
+                    _sqliteOptions = null;
                     return new LogStoreLoggerFactory(
                         new CsvFileLogStorageBackendFactory(
                             Path.Combine(rootDirectory, "Csv")),
+                        LogLevel.Trace).CreateLogger(loggerName);
+
+                case StorageBackendKind.SqliteDatabase:
+                    _tableBackend = null;
+                    _sqliteOptions = new SqliteLogStorageOptions(
+                        Path.Combine(rootDirectory, "Sqlite", "logger.db"));
+                    return new LogStoreLoggerFactory(
+                        new SqliteLogStorageBackendFactory(_sqliteOptions),
                         LogLevel.Trace).CreateLogger(loggerName);
 
                 case StorageBackendKind.SimulatedDatabase:
                     DemoTableLogStorageBackendFactory tableFactory = new DemoTableLogStorageBackendFactory();
                     ILoggerOutput dbLogger = new LogStoreLoggerFactory(tableFactory, LogLevel.Trace).CreateLogger(loggerName);
                     _tableBackend = tableFactory.CurrentBackend;
+                    _sqliteOptions = null;
                     return dbLogger;
 
                 default:
                     _tableBackend = null;
+                    _sqliteOptions = null;
                     return new LogStoreLoggerFactory(
                         new TextFileLogStorageBackendFactory(
                             Path.Combine(rootDirectory, "Text")),
@@ -395,6 +411,24 @@ namespace Logger.WinForms.Demo
         private void UpdateBackendInfo(StorageBackendKind backendKind)
         {
             _descriptionLabel.Text = GetDescription(backendKind);
+
+            if (backendKind == StorageBackendKind.SqliteDatabase)
+            {
+                _targetLabel.Text = "杈撳嚭鐩爣: " + (_sqliteOptions != null ? _sqliteOptions.DatabaseFilePath : "SQLite database");
+                _previewGroup.Text = "SQLite 记录预览";
+                _filePreviewTextBox.Visible = false;
+                _tablePreviewGrid.Visible = true;
+                return;
+            }
+
+            if (backendKind == StorageBackendKind.SimulatedDatabase)
+            {
+                _targetLabel.Text = "杈撳嚭鐩爣: 妯℃嫙鏁版嵁琛?锛堝唴瀛橀瑙堬級";
+                _previewGroup.Text = "琛ㄨ褰曢瑙?";
+                _filePreviewTextBox.Visible = false;
+                _tablePreviewGrid.Visible = true;
+                return;
+            }
 
             if (_sessionSource != null)
             {
@@ -545,6 +579,12 @@ namespace Logger.WinForms.Demo
 
         private void RefreshTablePreview()
         {
+            if (_currentBackendKind == StorageBackendKind.SqliteDatabase)
+            {
+                RefreshSqlitePreview();
+                return;
+            }
+
             _tablePreviewGrid.Rows.Clear();
 
             if (_tableBackend == null)
@@ -567,6 +607,30 @@ namespace Logger.WinForms.Demo
             }
 
             UpdateStatus(string.Format("表预览已刷新，当前共 {0:N0} 条记录", records.Count));
+        }
+
+        private void RefreshSqlitePreview()
+        {
+            _tablePreviewGrid.Rows.Clear();
+
+            if (_sqliteOptions == null)
+            {
+                UpdateStatus("褰撳墠涓嶆槸 SQLite 瀛樺偍鍚庣銆?");
+                return;
+            }
+
+            IReadOnlyList<SqliteLogRecord> records = SqliteLogReader.ReadLatestRecords(_sqliteOptions, 500);
+            for (int index = records.Count - 1; index >= 0; index--)
+            {
+                SqliteLogRecord record = records[index];
+                _tablePreviewGrid.Rows.Add(
+                    record.Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff"),
+                    record.LevelText,
+                    record.LoggerName,
+                    NormalizeSingleLine(record.Message));
+            }
+
+            UpdateStatus(string.Format("SQLite 棰勮宸插埛鏂帮紝褰撳墠鍏?{0:N0} 鏉¤褰?", records.Count));
         }
 
         private void SchedulePreviewRefresh()
@@ -596,6 +660,8 @@ namespace Logger.WinForms.Demo
                 case 1:
                     return StorageBackendKind.CsvFile;
                 case 2:
+                    return StorageBackendKind.SqliteDatabase;
+                case 3:
                     return StorageBackendKind.SimulatedDatabase;
                 default:
                     return StorageBackendKind.TextFile;
@@ -606,6 +672,8 @@ namespace Logger.WinForms.Demo
         {
             switch (backendKind)
             {
+                case StorageBackendKind.SqliteDatabase:
+                    return "SQLite 数据库后端";
                 case StorageBackendKind.CsvFile:
                     return "CSV 文件后端";
                 case StorageBackendKind.SimulatedDatabase:
@@ -619,6 +687,8 @@ namespace Logger.WinForms.Demo
         {
             switch (backendKind)
             {
+                case StorageBackendKind.SqliteDatabase:
+                    return "褰撳墠婕旂ず鐨勬槸 SQLite 瀛樺偍鍚庣銆傛棩蹇楀厛杩涘叆鍚庣鎶ュ鐞嗭紝鍐嶅啓鍏ユ暟鎹簱鏂囦欢銆?";
                 case StorageBackendKind.CsvFile:
                     return "当前演示的是 CsvFileLogStorageBackendFactory。日志仍然写到 ILoggerOutput，存储格式改成 CSV。";
                 case StorageBackendKind.SimulatedDatabase:
@@ -632,6 +702,21 @@ namespace Logger.WinForms.Demo
         {
             switch (backendKind)
             {
+                case StorageBackendKind.SqliteDatabase:
+                    return
+@"using Logger.Core;
+using Logger.Sqlite;
+
+var options = new SqliteLogStorageOptions(@""D:\Logs\Logger.sqlite"");
+var loggerFactory = new LogStoreLoggerFactory(
+    new SqliteLogStorageBackendFactory(options),
+    minimumLevel: LogLevel.Trace);
+
+ILoggerOutput logger = loggerFactory.CreateLogger(""OrderService"");
+logPanel.Logger = logger;
+
+logger.Info(""SQLite logger ready."");
+logger.Error(""line1\r\nline2"");";
                 case StorageBackendKind.CsvFile:
                     return
 @"using Logger.Core;
@@ -724,6 +809,7 @@ logger.Error(""line1\r\nline2"");";
         {
             TextFile,
             CsvFile,
+            SqliteDatabase,
             SimulatedDatabase
         }
     }

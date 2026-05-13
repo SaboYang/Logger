@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net48;net8.0-windows</TargetFrameworks>
+    <PackageId>ZH.Logger.Sqlite</PackageId>
+    <AssemblyName>Logger.Sqlite</AssemblyName>
+    <RootNamespace>Logger.Sqlite</RootNamespace>
+    <Description>SQLite storage backend for the Logger suite.</Description>
+    <PackageReadmeFile>NuGet.README.md</PackageReadmeFile>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <LangVersion>7.3</LangVersion>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Logger.Core\Logger.Core.csproj" />
+    <Reference Include="System.Data.SQLite">
+      <HintPath>lib\System.Data.SQLite.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\NuGet.README.md" Pack="true" PackagePath="" />
+    <None Include="..\LICENSE" Pack="true" PackagePath="" />
+    <Content Include="runtimes\win-x86\native\SQLite.Interop.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="runtimes\win-x64\native\SQLite.Interop.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </Content>
+  </ItemGroup>
+</Project>

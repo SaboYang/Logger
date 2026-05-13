@@ -2,6 +2,8 @@
   <Project Path="Logger.Core/Logger.Core.csproj" Id="7f2f6e48-fe78-4dc0-8314-03ce76a776bd" />
   <Project Path="Logger.Extensions.Logging/Logger.Extensions.Logging.csproj" Id="d6a73a28-7d7d-4a2b-a99d-0e09a8f4c901" />
   <Project Path="Logger.Extensions.Logging.Demo/Logger.Extensions.Logging.Demo.csproj" Id="9f2de563-1a72-4c47-9d6f-9f4ff1ed2b2d" />
+  <Project Path="Logger.Sqlite/Logger.Sqlite.csproj" Id="4f57c77d-0c6d-4af5-8454-d3c32ef8c8b2" />
+  <Project Path="Logger.Sqlite.Tests/Logger.Sqlite.Tests.csproj" Id="b6fe3d3a-9e83-4bb0-a531-2c5f5a2d7f91" />
   <Project Path="Logger.WinForms.Demo/Logger.WinForms.Demo.csproj" Id="87de7a79-c253-4997-8180-cc7ad32c75d0" />
   <Project Path="Logger.WinForms.WpfHosts/Logger.WinForms.WpfHosts.csproj" Id="a0c6e9ab-8a2a-4f70-9a52-8455a0f784b1" />
   <Project Path="Logger.WinForms/Logger.WinForms.csproj" Id="e0fe38c9-3511-474a-9c2e-6833d97d951d" />
