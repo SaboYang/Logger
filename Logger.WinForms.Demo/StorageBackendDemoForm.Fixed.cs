@@ -414,7 +414,7 @@ namespace Logger.WinForms.Demo
 
             if (backendKind == StorageBackendKind.SqliteDatabase)
             {
-                _targetLabel.Text = "杈撳嚭鐩爣: " + (_sqliteOptions != null ? _sqliteOptions.DatabaseFilePath : "SQLite database");
+                _targetLabel.Text = "输出目标: " + (_sqliteOptions != null ? _sqliteOptions.DatabaseFilePath : "SQLite database");
                 _previewGroup.Text = "SQLite 记录预览";
                 _filePreviewTextBox.Visible = false;
                 _tablePreviewGrid.Visible = true;
@@ -423,8 +423,8 @@ namespace Logger.WinForms.Demo
 
             if (backendKind == StorageBackendKind.SimulatedDatabase)
             {
-                _targetLabel.Text = "杈撳嚭鐩爣: 妯℃嫙鏁版嵁琛?锛堝唴瀛橀瑙堬級";
-                _previewGroup.Text = "琛ㄨ褰曢瑙?";
+                _targetLabel.Text = "输出目标: 自定义表后端（内存预览）";
+                _previewGroup.Text = "表记录预览";
                 _filePreviewTextBox.Visible = false;
                 _tablePreviewGrid.Visible = true;
                 return;
@@ -564,7 +564,29 @@ namespace Logger.WinForms.Demo
                 return;
             }
 
-            string text = File.ReadAllText(filePath);
+            string text;
+            try
+            {
+                using (FileStream stream = new FileStream(
+                    filePath,
+                    FileMode.Open,
+                    FileAccess.Read,
+                    FileShare.ReadWrite | FileShare.Delete))
+                using (StreamReader reader = new StreamReader(stream))
+                {
+                    text = reader.ReadToEnd();
+                }
+            }
+            catch (IOException)
+            {
+                _filePreviewTextBox.Text = "日志文件正在写入或被其他进程占用，请稍后再试。";
+                return;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                _filePreviewTextBox.Text = "日志文件无法访问，请检查权限或文件占用情况。";
+                return;
+            }
             const int maxPreviewLength = 40000;
             if (text.Length > maxPreviewLength)
             {
@@ -615,7 +637,7 @@ namespace Logger.WinForms.Demo
 
             if (_sqliteOptions == null)
             {
-                UpdateStatus("褰撳墠涓嶆槸 SQLite 瀛樺偍鍚庣銆?");
+                UpdateStatus("当前不是 SQLite 存储后端。");
                 return;
             }
 
@@ -630,7 +652,7 @@ namespace Logger.WinForms.Demo
                     NormalizeSingleLine(record.Message));
             }
 
-            UpdateStatus(string.Format("SQLite 棰勮宸插埛鏂帮紝褰撳墠鍏?{0:N0} 鏉¤褰?", records.Count));
+            UpdateStatus(string.Format("SQLite 预览已刷新，当前共 {0:N0} 条记录。", records.Count));
         }
 
         private void SchedulePreviewRefresh()
@@ -688,7 +710,7 @@ namespace Logger.WinForms.Demo
             switch (backendKind)
             {
                 case StorageBackendKind.SqliteDatabase:
-                    return "褰撳墠婕旂ず鐨勬槸 SQLite 瀛樺偍鍚庣銆傛棩蹇楀厛杩涘叆鍚庣鎶ュ鐞嗭紝鍐嶅啓鍏ユ暟鎹簱鏂囦欢銆?";
+                    return "当前演示的是 SQLite 存储后端。日志先进入后端处理，再写入数据库文件。";
                 case StorageBackendKind.CsvFile:
                     return "当前演示的是 CsvFileLogStorageBackendFactory。日志仍然写到 ILoggerOutput，存储格式改成 CSV。";
                 case StorageBackendKind.SimulatedDatabase:
