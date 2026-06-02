@@ -11,6 +11,7 @@ using Serilog;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3} {SourceContext}] {Message:lj}{NewLine}{Exception}")
+    .WriteTo.File("Logs/app.log", shared: true)
     .CreateLogger();
 
 var factory = new SerilogLoggerFactory(new SerilogLoggerOptions
@@ -29,4 +30,5 @@ logger.Info("Serilog 接入完成");
 - `SourceContext` 默认映射为适配后的 logger 名称
 - `LoggerName`、`SessionId` 和 `SessionStartedAt` 可按需写入 Serilog event properties
 - `Success` 等级默认映射到 `Information`
+- 安装 `ZH.Logger.Serilog` 后可以直接使用 `Serilog.Sinks.File` 将日志写到本地文件
 - 普通文本消息会自动转义为 Serilog message template，避免 `{}` 被当成占位符

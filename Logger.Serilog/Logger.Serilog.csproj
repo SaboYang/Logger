@@ -19,6 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Logger.Core\Logger.Core.csproj" />
     <PackageReference Include="Serilog" Version="4.3.1" />
+    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
   </ItemGroup>
 
   <ItemGroup>

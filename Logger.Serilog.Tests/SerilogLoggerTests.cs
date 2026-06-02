@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Logger.Core;
 using Logger.Core.Models;
 using Serilog;
@@ -83,6 +84,33 @@ namespace Logger.Serilog.Tests
             Assert.Equal("failure {reason}", _sink.Events[0].RenderMessage());
             Assert.Same(exception, _sink.Events[0].Exception);
             Assert.Equal(LogEventLevel.Error, _sink.Events[0].Level);
+        }
+
+        /// <summary>
+        /// 验证 Serilog 可以将日志写入本地文件。
+        /// </summary>
+        [Fact]
+        public void Write_CanPersistToLocalFile()
+        {
+            string logDirectory = Path.Combine(Path.GetTempPath(), "Logger.Serilog.Tests", Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(logDirectory);
+            string logFilePath = Path.Combine(logDirectory, "app.log");
+
+            Log.CloseAndFlush();
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Verbose()
+                .WriteTo.File(logFilePath, shared: true)
+                .CreateLogger();
+
+            SerilogLoggerFactory factory = new SerilogLoggerFactory();
+            ILoggerOutput logger = factory.CreateLogger("LocalFile");
+
+            logger.Info("persisted to file");
+            Log.CloseAndFlush();
+
+            Assert.True(File.Exists(logFilePath));
+            string fileContent = File.ReadAllText(logFilePath);
+            Assert.Contains("persisted to file", fileContent);
         }
 
         /// <summary>

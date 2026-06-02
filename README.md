@@ -18,7 +18,7 @@
 - 内置本地 `spool/WAL`：先顺序落本地，再由后台慢慢转存到文件、CSV 或自定义后端
 - 默认 `spool/WAL` 刷新模式为 `Buffered`，优先保证日志吞吐；如果需要更强本地持久化，可切换到 `Durable`
 - 支持文本文件、CSV、以及自定义存储后端
-- 支持接入 NLog、Serilog，作为独立的外部日志路由层
+- 支持接入 NLog、Serilog，作为独立的外部日志路由层；Serilog 适配包可直接写入本地文件
 - 文件存储支持 `单文件 / 年 / 月 / 周 / 日 / 日带保留期` 五种滚动方式，默认按日滚动
 - UI 自带搜索、等级过滤、复制当前显示内容、清空视图
 - 搜索框默认隐藏，通过 `SearchBoxVisible` 属性控制显示
@@ -356,6 +356,7 @@ using Serilog;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3} {SourceContext}] {Message:lj}{NewLine}{Exception}")
+    .WriteTo.File("Logs/app.log", shared: true)
     .CreateLogger();
 
 var factory = new SerilogLoggerFactory(new SerilogLoggerOptions
@@ -368,6 +369,11 @@ LogManager.Configure(new LoggerService(factory));
 ILoggerOutput logger = LogManager.GetLogger("OrderService");
 logger.Info("Serilog 接入完成");
 ```
+
+说明：
+
+- `ZH.Logger.Serilog` 已包含 `Serilog.Sinks.File`，可以直接调用 `.WriteTo.File(...)`
+- `shared: true` 适合单进程写本地文件的常见场景；如果你有多进程写入需求，需要根据 Serilog 文件 sink 的约束再调整
 
 ## 推荐用法
 
