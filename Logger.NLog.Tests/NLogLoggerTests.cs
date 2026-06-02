@@ -22,9 +22,9 @@ namespace Logger.NLog.Tests
             };
 
             LoggingConfiguration configuration = new LoggingConfiguration();
-            configuration.AddRule(NLog.LogLevel.Trace, NLog.LogLevel.Fatal, _memoryTarget);
-            NLog.LogManager.Configuration = configuration;
-            NLog.LogManager.ReconfigExistingLoggers();
+            configuration.AddRule(global::NLog.LogLevel.Trace, global::NLog.LogLevel.Fatal, _memoryTarget);
+            global::NLog.LogManager.Configuration = configuration;
+            global::NLog.LogManager.ReconfigExistingLoggers();
         }
 
         [Fact]
@@ -52,7 +52,7 @@ namespace Logger.NLog.Tests
             Assert.Equal(5, _memoryTarget.Logs.Count);
             Assert.Contains("Info|App.OrderService|info|OrderService|", _memoryTarget.Logs[0]);
             Assert.Contains("|true", _memoryTarget.Logs[1]);
-            Assert.Contains("Warning|App.OrderService|warn|OrderService|", _memoryTarget.Logs[2]);
+            Assert.Contains("Warn|App.OrderService|warn|OrderService|", _memoryTarget.Logs[2]);
             Assert.Contains("Error|App.OrderService|error|OrderService|", _memoryTarget.Logs[3]);
             Assert.Contains("Fatal|App.OrderService|fatal|OrderService|", _memoryTarget.Logs[4]);
         }
@@ -78,7 +78,7 @@ namespace Logger.NLog.Tests
 
         public void Dispose()
         {
-            NLog.LogManager.Shutdown();
+            global::NLog.LogManager.Shutdown();
         }
     }
 }

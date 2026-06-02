@@ -5,5 +5,7 @@
     <NuGetAudit>false</NuGetAudit>
     <NoWarn>$(NoWarn);NU1900</NoWarn>
     <MSBuildEnableWorkloadResolver>false</MSBuildEnableWorkloadResolver>
+    <BaseIntermediateOutputPath>$(TEMP)\WpfApp1\$(MSBuildProjectName)\obj\</BaseIntermediateOutputPath>
+    <MSBuildProjectExtensionsPath>$(TEMP)\WpfApp1\$(MSBuildProjectName)\obj\</MSBuildProjectExtensionsPath>
   </PropertyGroup>
 </Project>

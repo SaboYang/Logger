@@ -16,9 +16,9 @@ namespace Logger.NLog.Demo
             };
 
             LoggingConfiguration configuration = new LoggingConfiguration();
-            configuration.AddRule(NLog.LogLevel.Trace, NLog.LogLevel.Fatal, memoryTarget);
-            NLog.LogManager.Configuration = configuration;
-            NLog.LogManager.ReconfigExistingLoggers();
+            configuration.AddRule(global::NLog.LogLevel.Trace, global::NLog.LogLevel.Fatal, memoryTarget);
+            global::NLog.LogManager.Configuration = configuration;
+            global::NLog.LogManager.ReconfigExistingLoggers();
 
             NLogLoggerFactory factory = new NLogLoggerFactory(new NLogLoggerOptions
             {
@@ -36,7 +36,7 @@ namespace Logger.NLog.Demo
                 Console.WriteLine(line);
             }
 
-            NLog.LogManager.Shutdown();
+            global::NLog.LogManager.Shutdown();
         }
     }
 }
