@@ -18,6 +18,7 @@
 - 内置本地 `spool/WAL`：先顺序落本地，再由后台慢慢转存到文件、CSV 或自定义后端
 - 默认 `spool/WAL` 刷新模式为 `Buffered`，优先保证日志吞吐；如果需要更强本地持久化，可切换到 `Durable`
 - 支持文本文件、CSV、以及自定义存储后端
+- 支持接入 NLog，作为独立的外部日志路由层
 - 文件存储支持 `单文件 / 年 / 月 / 周 / 日 / 日带保留期` 五种滚动方式，默认按日滚动
 - UI 自带搜索、等级过滤、复制当前显示内容、清空视图
 - 搜索框默认隐藏，通过 `SearchBoxVisible` 属性控制显示
@@ -323,6 +324,25 @@ var factory = new LogStoreLoggerFactory(
     spoolFlushMode: LogSpoolFlushMode.Buffered);
 
 LogManager.Configure(new LoggerService(factory));
+```
+
+## 接入 NLog
+
+如果你希望把 `Logger.Core` 的输出转发到 NLog，可以直接使用 `Logger.NLog`：
+
+```csharp
+using Logger.Core;
+using Logger.NLog;
+
+var factory = new NLogLoggerFactory(new NLogLoggerOptions
+{
+    LoggerNamePrefix = "MyApp."
+});
+
+LogManager.Configure(new LoggerService(factory));
+
+ILoggerOutput logger = LogManager.GetLogger("OrderService");
+logger.Info("NLog 接入完成");
 ```
 
 ## 推荐用法
