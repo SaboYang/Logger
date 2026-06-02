@@ -1,9 +1,10 @@
 # Logger 包说明
 
-本仓库发布四个 NuGet 包：
+本仓库发布五个 NuGet 包：
 
 - `ZH.Logger.Core`
 - `ZH.Logger.Extensions.Logging`
+- `ZH.Logger.Serilog`
 - `ZH.Logger.Wpf`
 - `ZH.Logger.WinForms`
 
@@ -11,6 +12,7 @@
 
 - 需要日志接口、全局服务和存储扩展点时，安装 `ZH.Logger.Core`
 - 需要接入 `Microsoft.Extensions.Logging` 和 `ILogger<T>` 适配时，安装 `ZH.Logger.Extensions.Logging`
+- 需要接入 Serilog 适配时，安装 `ZH.Logger.Serilog`
 - 需要 WPF 日志控件时，安装 `ZH.Logger.Wpf`
 - 需要 WinForms 控件或在 WinForms 中承载 WPF 控件时，安装 `ZH.Logger.WinForms`
 
