@@ -375,6 +375,8 @@ logger.Info("Serilog 接入完成");
 - `ZH.Logger.Serilog` 已包含 `Serilog.Sinks.File`，可以直接调用 `.WriteTo.File(...)`
 - `shared: true` 适合单进程写本地文件的常见场景；如果你有多进程写入需求，需要根据 Serilog 文件 sink 的约束再调整
 
+如果你想看一个可以直接运行的本地文件示例，可以启动 `Logger.Serilog.Demo`，它会把日志写到 `bin\\Debug\\net8.0\\Logs\\serilog-demo.log`，然后把文件内容打印到控制台。
+
 ## 推荐用法
 
 推荐：

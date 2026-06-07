@@ -9,6 +9,7 @@
   <Project Path="Logger.NLog.Demo/Logger.NLog.Demo.csproj" Id="9b6f4b5c-6d8f-4f83-8a7f-f35c7f1265ad" />
   <Project Path="Logger.Serilog/Logger.Serilog.csproj" Id="98008bc8-2ced-40a9-9840-960e6534dee9" />
   <Project Path="Logger.Serilog.Tests/Logger.Serilog.Tests.csproj" Id="50464b6f-9610-4625-a635-a1a34701b4cd" />
+  <Project Path="Logger.Serilog.Demo/Logger.Serilog.Demo.csproj" Id="4ef916d3-5e5b-407a-b42d-9338c654a744" />
  
   <Project Path="Logger.WinForms.Demo/Logger.WinForms.Demo.csproj" Id="87de7a79-c253-4997-8180-cc7ad32c75d0" />
   <Project Path="Logger.WinForms.WpfHosts/Logger.WinForms.WpfHosts.csproj" Id="a0c6e9ab-8a2a-4f70-9a52-8455a0f784b1" />
