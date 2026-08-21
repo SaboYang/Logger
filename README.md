@@ -419,5 +419,6 @@ logPanel.Info("写业务日志");
 ## 更多文档
 
 - [完整 API 文档](docs/Logger-API.md)
+- [ILoggerOutput 实现说明](docs/Logger-ILoggerOutput-Implementations.md)
 - [类图](docs/Logger-ClassDiagram.md)
 - [结构类图（当前版本）](docs/Logger-Structure-ClassDiagram-Current.md)
