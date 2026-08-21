@@ -19,6 +19,7 @@
 - 默认 `spool/WAL` 刷新模式为 `Buffered`，优先保证日志吞吐；如果需要更强本地持久化，可切换到 `Durable`
 - 支持文本文件、CSV、以及自定义存储后端
 - 支持接入 NLog、Serilog，作为独立的外部日志路由层；Serilog 适配包可直接写入本地文件
+- 支持通过 `LoggerOutputSink` 将 Serilog 主日志同步到 WPF / WinForms 使用的 `ILoggerOutput`
 - 文件存储支持 `单文件 / 年 / 月 / 周 / 日 / 日带保留期` 五种滚动方式，默认按日滚动
 - UI 自带搜索、等级过滤、复制当前显示内容、清空视图
 - 搜索框默认隐藏，通过 `SearchBoxVisible` 属性控制显示
@@ -376,6 +377,26 @@ logger.Info("Serilog 接入完成");
 - `shared: true` 适合单进程写本地文件的常见场景；如果你有多进程写入需求，需要根据 Serilog 文件 sink 的约束再调整
 
 如果你想看一个可以直接运行的本地文件示例，可以启动 `Logger.Serilog.Demo`，它会把日志写到 `bin\\Debug\\net8.0\\Logs\\serilog-demo.log`，然后把文件内容打印到控制台。
+
+### Serilog 同步到 ILoggerOutput
+
+如果业务代码以 Serilog 为主，同时需要把日志同步到 UI 控件，可以使用 `LoggerOutputSink`：
+
+```csharp
+ILoggerOutput panelLogger = new LogStoreLoggerFactory(
+    logRootDirectoryPath: "Logs",
+    minimumLevel: LogLevel.Trace)
+    .CreateLogger("SerilogPanel");
+
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.File("Logs/app.log", shared: true)
+    .WriteTo.Sink(new LoggerOutputSink(panelLogger))
+    .CreateLogger();
+
+Log.Information("这条日志会同时写入文件和 UI 日志控件");
+```
+
+`panelLogger` 不要使用 `SerilogLoggerFactory` 创建，否则会形成循环转发。
 
 ## 推荐用法
 
